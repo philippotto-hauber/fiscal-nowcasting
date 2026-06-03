@@ -1,19 +1,7 @@
 function draws = GibbsSampler( X , yQ , priors , options )
 
     % preallocate space for draws
-    if options.flag_samplemoments == 0
-        draws.nowcast = NaN( 1  , options.Nreplic/options.Nthin ) ;
-        if options.Nh == 3
-            draws.forecast = NaN( 1 , options.Nreplic/options.Nthin ) ;
-        end
-    elseif options.flag_samplemoments == 1
-        draws.nowcast_mean = NaN( 1  , options.Nreplic/options.Nthin ) ;
-        draws.nowcast_var = NaN( 1  , options.Nreplic/options.Nthin ) ;
-        if options.Nh == 3
-            draws.forecast_mean = NaN( 1 , options.Nreplic/options.Nthin ) ;
-            draws.forecast_var = NaN( 1 , options.Nreplic/options.Nthin ) ;
-        end
-    end
+    draws.forecasts = NaN( ceil(options.Nh / 3), options.Nq ,options.Nreplic/options.Nthin ) ;
 
     draws.flag_phi_prev = NaN( 1  , options.Nreplic/options.Nthin ) ; 
 
@@ -74,23 +62,8 @@ function draws = GibbsSampler( X , yQ , priors , options )
         else
             data = [ X ; yQ ];
         end
-        if options.flag_samplemoments == 0  
-            [ alpha_hat , alphaplus, ~] = f_DK2002( data , T , Z , R , Q , H , a1 , P1 , options ) ;
-
-            alpha = alpha_hat + alphaplus ; % random draw of state vector
-
-        elseif options.flag_samplemoments == 1
-            [alpha, aTT, PTT] = f_DK2002_twostep( data , Z , T , R , Q , H , a1 , P1 ) ;
-
-            RQR = R * Q * R' ; 
-            if options.Nh == 3
-                hhs = [ 0 , 3 ] ;
-                [ densmean , densvar ] = f_dens_meanvar( aTT , PTT , Z , T , RQR , hhs , options ) ;
-            else 
-                hhs = options.Nh ;
-                [ densmean , densvar ] = f_dens_meanvar( aTT , PTT , Z , T , RQR , hhs , options ) ;
-            end
-        end
+        [ alpha_hat , alphaplus, ~] = f_DK2002( data , T , Z , R , Q , H , a1 , P1 , options ) ;
+        alpha = alpha_hat + alphaplus ; % random draw of state vector
 
         % ---------------------------- %
         % - extract eta and eta lags
@@ -118,48 +91,34 @@ function draws = GibbsSampler( X , yQ , priors , options )
             Xplus = Xplus' ;     
         end    
 
-        % --------------------------------------- %
-        % - mean and var of predictive density
-        if options.flag_samplemoments == 1
-            RQR = R * Q * R' ; 
-            if options.Nh == 3
-                hhs = [ 0 , 3 ] ;
-                [ densmean , densvar ] = f_dens_meanvar( aTT , PTT , Z , T , RQR , hhs , options ) ;
-            else 
-                hhs = options.Nh ;
-                [ densmean , densvar ] = f_dens_meanvar( aTT , PTT , Z , T , RQR , hhs , options ) ;
-            end
-        elseif options.flag_samplemoments == 0        
+        % sample forecasts
+        % ------------------ 
+        Yqfore = NaN(length(options.Nh),options.Nq); 
+        Yfore = [y; NaN(max(options.Nh),options.Nq)];    
+        etafore = [eta; NaN(max(options.Nh),options.Ns)];
 
-            % sample forecasts
-            % ------------------ 
-            Yqfore = NaN(length(options.Nh),options.Nq); 
-            Yfore = [y; NaN(max(options.Nh),options.Nq)];    
-            etafore = [eta; NaN(max(options.Nh),options.Ns)];
-
-            % simulate eta and Y max(options.Nh)-periods ahead    
-            for h = 1 : max(options.Nh)
-                % update etafore_vec
-                etafore_vec = []; for p = 1 : options.Np ;etafore_vec = [etafore_vec; etafore(end - max(options.Nh) + h - p,:)'];end        
-                % propagate factors forward
-                etafore(end-max(options.Nh)+h,:) = (phi*etafore_vec + chol(Sigma)*randn(options.Ns,1))';  
-                etalag = etafore(end-max(options.Nh)+h,:);
-                for s = 1 : options.Nr/options.Ns - 1
-                    etalag = [etafore( end - max( options.Nh ) + h - s,:) etalag];
-                end
-
-                % compute Yplus(h,:)
-                Yfore(end-max(options.Nh)+h,:) = etalag * lambda( options.Nm + 1 : end , : )' + (chol(diag(omega( options.Nm + 1 : end , 1 ))) * randn(options.Nq,1))' ; 
+        % simulate eta and Y max(options.Nh)-periods ahead    
+        for h = 1 : max(options.Nh)
+            % update etafore_vec
+            etafore_vec = []; for p = 1 : options.Np ;etafore_vec = [etafore_vec; etafore(end - max(options.Nh) + h - p,:)'];end        
+            % propagate factors forward
+            etafore(end-max(options.Nh)+h,:) = (phi*etafore_vec + chol(Sigma)*randn(options.Ns,1))';  
+            etalag = etafore(end-max(options.Nh)+h,:);
+            for s = 1 : options.Nr/options.Ns - 1
+                etalag = [etafore( end - max( options.Nh ) + h - s,:) etalag];
             end
 
-            % extract quarterly forecasts from Yfore
-            if options.Nh==3
-                nowcast = [1/3 2/3 3/3 2/3 1/3] * flipud(Yfore(end-7 : end-3)) ; 
-                forecast = [1/3 2/3 3/3 2/3 1/3] * flipud(Yfore(end-4 : end)) ; 
-            else
-                nowcast = [1/3 2/3 3/3 2/3 1/3] * flipud(Yfore(end-4 : end)) ; 
+            % compute Yplus(h,:)
+            Yfore(end-max(options.Nh)+h,:) = etalag * lambda( options.Nm + 1 : end , : )' + (chol(diag(omega( options.Nm + 1 : end , 1 ))) * randn(options.Nq,1))' ; 
+        end
+
+        % extract quarterly forecasts from Yfore
+        for h = 1 : ceil(options.Nh / 3)
+            for i = 1 : options.Nq
+                Yqfore(h, i) = [1/3 2/3 3/3 2/3 1/3] * Yfore(end - (h - 1) * 3 - 4 : end - (h - 1) * 3, i);
             end
         end
+
 
         % ------------------------------------------------------------------- %
         % sample lambda
@@ -217,24 +176,13 @@ function draws = GibbsSampler( X , yQ , priors , options )
         % store draws
         % ------------------------------------------------------------------- %
 
-        if m > options.Nburnin && mod(m - options.Nburnin,options.Nthin) == 0        
-            if options.flag_samplemoments == 0
-                draws.nowcast( :  , (m - options.Nburnin)/options.Nthin ) = nowcast ;
-                if options.Nh == 3
-                    draws.forecast( : , (m - options.Nburnin)/options.Nthin ) = forecast;
-                end
-            elseif options.flag_samplemoments == 1
-                draws.nowcast_mean( :  , (m - options.Nburnin)/options.Nthin ) = densmean( 1 , 1 ) ;
-                draws.nowcast_var( :  , (m - options.Nburnin)/options.Nthin ) = densvar( 1 , 1 ) ;
-                if options.Nh == 3
-                    draws.forecast_mean( : , (m - options.Nburnin)/options.Nthin ) = densmean( 1 , 2 ) ;
-                    draws.forecast_var( : , (m - options.Nburnin)/options.Nthin ) = densvar( 1 , 2 ) ;
-                end
-            end
+        if m > options.Nburnin && mod(m - options.Nburnin,options.Nthin) == 0  
+            draws.forecasts( :, :, (m - options.Nburnin)/options.Nthin ) = Yqfore ;                
             draws.flag_phi_prev( :  , (m - options.Nburnin)/options.Nthin ) = flag_phi_prev ;
         end
-    end 
+    end
 end
+
 
 % ------------------------------------------------------------------- %
 % FUNCTIONS
