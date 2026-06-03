@@ -31,10 +31,6 @@ priors.rho_A =  (pi1_phi_eM./(jj.^2)).^(-1); % -> precision, not variance!
 % ------
 priors.Omega_v = 3;
 priors.Omega_delta = 1;
-% priors.Omega_v = 0.1;
-% priors.Omega_delta = 0.1;
-% priors.Omega_v = 1001;
-% priors.Omega_delta = 500;
 
 % Sigma
 % ------
