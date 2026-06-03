@@ -46,8 +46,8 @@ function [Y_bal, index_balanced_start, index_balanced_end] = f_findbalancedsubsa
 [~,T] = size(Y);
 
 % start of balanced subsample
-for t=1:T;
-    if any(isnan(Y(:,t)));
+for t=1:T
+    if any(isnan(Y(:,t)))
         
     else
         break
