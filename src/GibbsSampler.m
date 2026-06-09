@@ -112,10 +112,11 @@ function draws = GibbsSampler( X , yQ , priors , options )
             Yfore(end-max(options.Nh)+h,:) = etalag * lambda( options.Nm + 1 : end , : )' + (chol(diag(omega( options.Nm + 1 : end , 1 ))) * randn(options.Nq,1))' ; 
         end
 
-        % extract quarterly forecasts from Yfore
-        for h = 1 : ceil(options.Nh / 3)
+        % extract quarterly forecasts from Yfore (h=1: nearest quarter, h=H: furthest)
+        H = ceil(options.Nh / 3);
+        for h = 1 : H
             for i = 1 : options.Nq
-                Yqfore(h, i) = [1/3 2/3 3/3 2/3 1/3] * Yfore(end - (h - 1) * 3 - 4 : end - (h - 1) * 3, i);
+                Yqfore(h, i) = [1/3 2/3 3/3 2/3 1/3] * Yfore(end - (H - h) * 3 - 4 : end - (H - h) * 3, i);
             end
         end
 

@@ -12,7 +12,7 @@ options.flag_samplemoments = 0;
 options.priorswitch = 2; % Normal-Gamma prior
 samplestart = 1996 + 1/12 ; 
 
-options.Nr = 8 ; % # of static factors
+options.Nr = 2 ; % # of static factors
 options.Ns = options.Nr ; % # of static factors
 options.Np = 3 ; % # of lags in factor VAR
 options.Nj = 0 ; % # of lags in eps
@@ -39,3 +39,9 @@ end
 priors = loadpriors(options, options.priorswitch); 
 
 draws = GibbsSampler(dataM_stand, dataQ_stand, priors, options);
+draws.forecasts_restand = draws.forecasts .* reshape(stds(options.Nm + 1 : end), 1, options.Nq, 1) + reshape(means(options.Nm + 1 : end), 1, options.Nq, 1);
+
+dataQ_restand = dataQ_stand .* stds(options.Nm + 1 : end)' + means(options.Nm + 1 : end)';
+
+plot_forecasts(draws, dataQ_restand, dates, options, names, groups, './output', ...
+               {'gross domestic product', 'private consumption'});
