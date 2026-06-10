@@ -17,10 +17,7 @@ options.Ns = options.Nr ; % # of static factors
 options.Np = 3 ; % # of lags in factor VAR
 options.Nj = 0 ; % # of lags in eps
 
-[dataM_stand, dataQ_stand, means, stds, flag_usestartvals, names, groups, dates, vintagedate] = f_constructdataset('./data', samplestart, '2026-05-15', [], [], []);  
-
-[dataM_stand, means, stds, names, groups, flag_usestartvals] = drop_variable(dataM_stand, means, stds, names, groups, flag_usestartvals, find(strcmp(names, 'Consumer: Confidence Indicator')));
-[dataM_stand, means, stds, names, groups, flag_usestartvals] = drop_variable(dataM_stand, means, stds, names, groups, flag_usestartvals, find(strcmp(names, 'Services: Current level of capacity utilization')));
+[dataM_stand, dataQ_stand, means, stds, flag_usestartvals, names, groups, dates, vintagedate] = load_data('./data', samplestart, '2026-05-15');
 
 % set some more options
 options.Nm = size(dataM_stand, 1);
