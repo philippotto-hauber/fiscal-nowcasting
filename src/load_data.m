@@ -31,12 +31,12 @@ for s = 1 : 2
     values    = raw{2};
     n         = length(values);
 
-    % 'YYYY-QN' -> quarter-start float (Q1->+0, Q2->+0.25, Q3->+0.5, Q4->+0.75)
+    % 'YYYY-QN' -> quarter-end float (Q1->Mar, Q2->Jun, Q3->Sep, Q4->Dec)
     dates_q = NaN(1, n);
     for j = 1 : n
         yr         = str2double(dates_str{j}(1:4));
         q          = str2double(dates_str{j}(7));
-        dates_q(j) = yr + (q - 1) * 3 / 12;
+        dates_q(j) = yr + (q - 1) * 3 / 12 + 2/12;
     end
 
     % Year-over-year growth rate (4-quarter difference)

@@ -1,9 +1,24 @@
 function draws = GibbsSampler( X , yQ , priors , options )
 
-    % preallocate space for draws
-    draws.forecasts = NaN( ceil(options.Nh / 3), options.Nq ,options.Nreplic/options.Nthin ) ;
+    draws.flag_phi_prev = NaN( 1  , options.Nreplic/options.Nthin ) ;
 
-    draws.flag_phi_prev = NaN( 1  , options.Nreplic/options.Nthin ) ; 
+    % per-variable total forecast horizon: count monthly NaN positions from
+    % Nt+Nh back to last observation (quarter-end months), divide by 3.
+    % j=1 is the earliest (most-distant) quarter, j=Hq_max is the furthest.
+    H_fore = ceil(options.Nh / 3);
+    Hq = zeros(1, options.Nq);
+    for i = 1 : options.Nq
+        last_obs = find(~isnan(yQ(i, :)), 1, 'last');
+        if isempty(last_obs)
+            Hq(i) = H_fore;
+        else
+            Hq(i) = ceil((options.Nt + options.Nh - last_obs) / 3);
+        end
+    end
+    Hq_max = max(Hq);
+
+    draws.Hq        = Hq;
+    draws.forecasts = NaN(Hq_max, options.Nq, options.Nreplic / options.Nthin);
 
     % compute effective lag length
     options.Np_eff = max( [options.Np , 5 + options.Nr / options.Ns - 1 , options.Nr/options.Ns + options.Nj ] ) ; 
@@ -92,31 +107,32 @@ function draws = GibbsSampler( X , yQ , priors , options )
         end    
 
         % sample forecasts
-        % ------------------ 
-        Yqfore = NaN(length(options.Nh),options.Nq); 
-        Yfore = [y; NaN(max(options.Nh),options.Nq)];    
-        etafore = [eta; NaN(max(options.Nh),options.Ns)];
+        % ------------------
+        Yqfore  = NaN(Hq_max, options.Nq);
+        Yfore   = [y; NaN(options.Nh, options.Nq)];
+        etafore = [eta; NaN(options.Nh, options.Ns)];
 
-        % simulate eta and Y max(options.Nh)-periods ahead    
-        for h = 1 : max(options.Nh)
-            % update etafore_vec
-            etafore_vec = []; for p = 1 : options.Np ;etafore_vec = [etafore_vec; etafore(end - max(options.Nh) + h - p,:)'];end        
-            % propagate factors forward
-            etafore(end-max(options.Nh)+h,:) = (phi*etafore_vec + chol(Sigma)*randn(options.Ns,1))';  
-            etalag = etafore(end-max(options.Nh)+h,:);
-            for s = 1 : options.Nr/options.Ns - 1
-                etalag = [etafore( end - max( options.Nh ) + h - s,:) etalag];
+        % simulate eta and Y options.Nh-periods ahead
+        for h = 1 : options.Nh
+            etafore_vec = [];
+            for p = 1 : options.Np
+                etafore_vec = [etafore_vec; etafore(end - options.Nh + h - p, :)'];
             end
-
-            % compute Yplus(h,:)
-            Yfore(end-max(options.Nh)+h,:) = etalag * lambda( options.Nm + 1 : end , : )' + (chol(diag(omega( options.Nm + 1 : end , 1 ))) * randn(options.Nq,1))' ; 
+            etafore(end - options.Nh + h, :) = (phi * etafore_vec + chol(Sigma) * randn(options.Ns, 1))';
+            etalag = etafore(end - options.Nh + h, :);
+            for s = 1 : options.Nr/options.Ns - 1
+                etalag = [etafore(end - options.Nh + h - s, :) etalag];
+            end
+            Yfore(end - options.Nh + h, :) = etalag * lambda(options.Nm + 1 : end, :)' + ...
+                (chol(diag(omega(options.Nm + 1 : end, 1))) * randn(options.Nq, 1))';
         end
 
-        % extract quarterly forecasts from Yfore (h=1: nearest quarter, h=H: furthest)
-        H = ceil(options.Nh / 3);
-        for h = 1 : H
-            for i = 1 : options.Nq
-                Yqfore(h, i) = [1/3 2/3 3/3 2/3 1/3] * Yfore(end - (H - h) * 3 - 4 : end - (H - h) * 3, i);
+        % extract quarterly forecasts/backcasts via M-M aggregation:
+        % j=1 earliest quarter, j=Hq_max furthest; variable i fills j=Hq_max-Hq(i)+1..Hq_max
+        for i = 1 : options.Nq
+            for j = Hq_max - Hq(i) + 1 : Hq_max
+                Yqfore(j, i) = [1/3 2/3 3/3 2/3 1/3] * ...
+                    Yfore(end - (Hq_max - j)*3 - 4 : end - (Hq_max - j)*3, i);
             end
         end
 
@@ -177,9 +193,9 @@ function draws = GibbsSampler( X , yQ , priors , options )
         % store draws
         % ------------------------------------------------------------------- %
 
-        if m > options.Nburnin && mod(m - options.Nburnin,options.Nthin) == 0  
-            draws.forecasts( :, :, (m - options.Nburnin)/options.Nthin ) = Yqfore ;                
-            draws.flag_phi_prev( :  , (m - options.Nburnin)/options.Nthin ) = flag_phi_prev ;
+        if m > options.Nburnin && mod(m - options.Nburnin, options.Nthin) == 0
+            draws.forecasts(:, :, (m - options.Nburnin)/options.Nthin) = Yqfore;
+            draws.flag_phi_prev(:, (m - options.Nburnin)/options.Nthin) = flag_phi_prev;
         end
     end
 end

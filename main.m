@@ -4,8 +4,8 @@ addpath("data")
 addpath("src")
 
 % options
-options.Nburnin = 50 ; % # of burn-ins
-options.Nreplic = 100 ; % # of replics
+options.Nburnin = 1000 ; % # of burn-ins
+options.Nreplic = 1000 ; % # of replics
 options.Nthin = 10 ; % store each options.thinning-th draw
 options.Ndisplay = 1000 ;  % display each options.display-th iteration
 options.flag_samplemoments = 0;
@@ -63,4 +63,4 @@ end
 exportgraphics(fig_fiscal, './output/fiscal_vars.png', 'Resolution', 150);
 
 plot_forecasts(draws, dataQ_restand, dates, options, names, groups, './output', ...
-               {'gross domestic product', 'total expenditures', 'total revenues'});
+               {'gross domestic product', 'total expenditures', 'total revenues'}, 2022);
