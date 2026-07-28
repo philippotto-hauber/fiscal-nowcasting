@@ -1,0 +1,85 @@
+mnemonic,source_column,source_description,transform
+DEBT_CG_TOTAL,0,"Public Debt, Central Government Debt, Total, EUR",none (already monthly)
+REV_GG_TAX_TOTAL,1,"General Government Budget, Revenues, Taxes, Total, EUR",none (already monthly)
+EXP_CG_TOTAL_EST,2,"Central Government Budget, Expenditures, Total, Estimated, EUR",none (already monthly)
+REV_CG_TOTAL_EST,5,"Central Government Budget, Revenues, Total, Estimated, EUR",none (already monthly)
+REV_CG_TAX_TOTAL_EST,6,"Central Government Budget, Revenues, Tax Revenue, Total, Estimated, EUR",none (already monthly)
+FIN_CG_COIN_EST,7,"Central Government Budget, Financial Balance, Estimated Revenue from Coin as Source of Financing the Deficit, EUR",none (already monthly)
+FIN_CG_NETBORROW_EST,8,"Central Government Budget, Financial Balance, Estimated Net Borrowing as Source of Financing the Deficit, EUR",none (already monthly)
+FIN_CG_RESERVES_EST,9,"Central Government Budget, Financial Balance, Movements in Reserves, Estimated, EUR",none (already monthly)
+UNEMPL_RATE,46,"Unemployment, Rate, as a Percent of Civilian Labour Force, SA",none (already monthly)
+REV_SG_TAX_WAGES,83,"State Government Budget, Revenues, Taxes, Joint Taxes, Wages Tax Before Partition, EUR",none (already monthly)
+REV_SG_TAX_CORP,84,"State Government Budget, Revenues, Taxes, Joint Taxes, Corporation Tax, EUR",none (already monthly)
+REV_SG_TAX_WITHHOLD,85,"State Government Budget, Revenues, Taxes, Joint Taxes, Final Withholding Tax on Interest & Capital Gains, EUR",none (already monthly)
+REV_SG_TAX_ASSESSED,86,"State Government Budget, Revenues, Taxes, Joint Taxes, Assessed Income Tax, EUR",none (already monthly)
+REV_SG_TAX_NONASSESSED,87,"State Government Budget, Revenues, Taxes, Joint Taxes, Non-Assessed Taxes on Earnings, EUR",none (already monthly)
+REV_CG_TAX_ASSESSED_FED,3,"Central Government Budget, Revenues, Tax Revenue, Assessed Income Tax as Federal Share of Joint Taxes, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TOTAL,11,"Central Government Budget, Revenues, Total, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_FEDSHARE,13,"Central Government Budget, Revenues, Tax Revenue, Federal Share of Joint Taxes, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_INCTAX_FED,14,"Central Government Budget, Revenues, Tax Revenue, Personal & Corporate Income Taxes, Including Final Withholding Tax on Interest & Capital Gains, as Federal Share of Joint Taxes, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_WAGES_FED,15,"Central Government Budget, Revenues, Tax Revenue, Wages Tax as Federal Share of Joint Taxes, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_NONASSESSED_FED,17,"Central Government Budget, Revenues, Tax Revenue, Non-Assessed Taxes on Earnings as Federal Share of Joint Taxes, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_WITHHOLD_FED,18,"Central Government Budget, Revenues, Tax Revenue, Final Withholding Tax on Interest & Capital Gains as Federal Share of Joint Taxes, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_VAT_FED,19,"Central Government Budget, Revenues, Tax Revenue, Value Added Taxes (VAT) as Federal Share of Joint Taxes, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_TRADETAX_FED,20,"Central Government Budget, Revenues, Tax Revenue, Trade Tax Apportionment as Federal Share of Joint Taxes, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_SUPPGRANTS,21,"Central Government Budget, Revenues, Tax Revenue, Supplementary Grants to States, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_EUOWN_GNI,22,"Central Government Budget, Revenues, Tax Revenue, EU Own Resources Based on Gross National Income, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_EUOWN_VAT,23,"Central Government Budget, Revenues, Tax Revenue, EU Own Resources Based on VAT, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_GRANTS_TRANSPORT,24,"Central Government Budget, Revenues, Tax Revenue, Grants to States for Public Transport, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_TAX_GRANTS_MVTAX,25,"Central Government Budget, Revenues, Tax Revenue, Grants to States for Motor Vehicle Tax & Heavy Goods Vehicle Toll, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_OTH_ECONACT,26,"Central Government Budget, Revenues, Other Revenues, Revenue from Economic Activity, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_OTH_INTEREST,27,"Central Government Budget, Revenues, Other Revenues, Interest Revenue, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+REV_CG_OTH_PRIVATIZATION,28,"Central Government Budget, Revenues, Other Revenues, Loan Repayments, Holdings & Privatization Revenue, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_GENSERV,73,"Central Government Budget, Expenditures, By Function, General Public Services, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_EDU,74,"Central Government Budget, Expenditures, By Function, Education, Science, Research & Cultural Affairs, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_DEFENSE,75,"Central Government Budget, Expenditures, By Function, Defence, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_SOCSEC,76,"Central Government Budget, Expenditures, By Function, Social Security, Family Youth Affairs & Labour Market Policy, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_HEALTH,77,"Central Government Budget, Expenditures, By Function, Health, Environment, Sport & Recreation, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_HOUSING,78,"Central Government Budget, Expenditures, By Function, Housing, Urban Development, Regional Planning & Local Community Services, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_AGRI,79,"Central Government Budget, Expenditures, By Function, Food, Agriculture & Forestry, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_ENERGY,80,"Central Government Budget, Expenditures, By Function, Energy & Water Supply, Trade & Services, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_TRANSPORT,81,"Central Government Budget, Expenditures, By Function, Transport & Communication, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_FUNC_FINMGMT,82,"Central Government Budget, Expenditures, By Function, Financial Management, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_CAT_INTEREST,90,"Central Government Budget, Expenditures, By Category, Interest Expenditures, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_CAT_GRANTS,91,"Central Government Budget, Expenditures, By Category, Ongoing Grants & Subsidies, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_CAT_HR,92,"Central Government Budget, Expenditures, By Category, Human Resources Expenditures, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_CAT_OPEX,93,"Central Government Budget, Expenditures, By Category, Operating Expenditures, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_CAT_INVEST,94,"Central Government Budget, Expenditures, By Category, Investment Expenditures, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_CAT_FIXEDASSET,95,"Central Government Budget, Expenditures, By Category, Fixed Asset Investment, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_CG_CAT_FINASSIST,96,"Central Government Budget, Expenditures, By Category, Financial Assistance, Aggregate, EUR",decumulate (year-to-date -> monthly flow)
+EXP_GG_SA_TOTAL,29,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_COE,30,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, Compensation of Employees, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_GFCF,31,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, Gross Capital Formation, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_INTERMED,32,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, Intermediate Consumption, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_SOCBEN,33,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, Social Benefits Other than Social Transfers in Kind, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GG_SA_NETLENDING,34,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Net Lending/Net Borrowing, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_GG_SA_TOTAL,35,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_GG_SA_LEVIES,36,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, Levies, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_GG_SA_SOCCONTRIB,37,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, Social Contributions, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_GG_SA_TAXES,38,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, Taxes, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_SOCBENKIND,39,"Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Social Benefits in Kind, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EMPL_TOTAL,40,"Employment, Total, Domestic Concept","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EMPL_EMPLOYEES,41,"Employment, Employees, Total, Domestic Concept","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GDP_NOMINAL,42,"Gross Domestic Product, Total, Current Prices, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GNI_CORP_INV_INCOME,43,"Income Approach, Gross National Income, Net National Income, Aggregate Income, Corporate & Investment Income, Resident Concept, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GNI_COE,44,"Income Approach, Gross National Income, Net National Income, Compensation of Employees, Resident Concept, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+HOURS_WORKED,45,"Productivity, Costs & Hours Worked, Hours Worked, Persons in Employment, Total (Domestic Concept)","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GDP_CONS_HH,47,"Expenditure Approach, Final Consumption Expenditure, Households & NPISH, Total, Calendar Adjusted (X13 JDemetra+), Current Prices, SA (X13 JDemetra+), EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GDP_CONS_GOV,48,"Expenditure Approach, Final Consumption Expenditure, Government, Total, All, Calendar Adjusted (X13 JDemetra+), Current Prices, SA (X13 JDemetra+), EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GDP_GFCF,49,"Expenditure Approach, Gross Capital Formation, Total, Calendar Adjusted (X13 JDemetra+), Current Prices, SA (X13 JDemetra+), EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GDP_EXPORTS,50,"Expenditure Approach, External Balance, Export, Total, Calendar Adjusted (X13 JDemetra+), Current Prices, SA (X13 JDemetra+), EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+GDP_IMPORTS,51,"Expenditure Approach, External Balance, Import, Total, Calendar Adjusted (X13 JDemetra+), Current Prices, SA (X13 JDemetra+), EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_GG_SA_TAXPROD,52,"Sector Accounts, General Government, Allocation of Primary Income, Resources, Taxes on Production & Imports, Receivable, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_GG_SA_TAXINCOME,53,"Sector Accounts, General Government, Secondary Distribution of Income, Resources, Current Taxes on Income, Wealth, Etc., EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_GG_SA_CAPTRANSFER_RES,54,"Sector Accounts, General Government, Changes in Net Worth Due to Saving & Capital Transfers, Resources, Capital Transfers, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_SUBSIDIES,58,"Sector Accounts, General Government, Allocation of Primary Income, Uses, Subsidies, Total, Payable, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_OTHTRANSFER,59,"Sector Accounts, General Government, Secondary Distribution of Income, Uses, Other Current Transfers, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_CAPTRANSFER_USE,61,"Sector Accounts, General Government, Changes in Net Worth Due to Saving & Capital Transfers, Uses, Capital Transfers, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_GG_SA_PROPINC_USE,71,"Sector Accounts, General Government, Allocation of Primary Income, Uses, Property Income, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_GG_SA_PROPINC_RES,72,"Sector Accounts, General Government, Allocation of Primary Income, Resources, Property Income, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_SSF_TOTAL,88,"Social Security Funds, Expenditures, Total, Aggregate, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_SSF_TOTAL,89,"Social Security Funds, Revenues, Total, Aggregate, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_PIF_TOTAL,97,"Pension Insurance Fund, Revenues, Total, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_PIF_TOTAL,98,"Pension Insurance Fund, Expenditures, Total, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+REV_PIF_CONTRIB,99,"Pension Insurance Fund, Revenues, Contributions, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
+EXP_PIF_PENSIONS,100,"Pension Insurance Fund, Expenditures, Pension Payments, EUR","dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)"
