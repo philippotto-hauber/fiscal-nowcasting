@@ -1,0 +1,13 @@
+mnemonic,flow,key,source_description,monthly_placement
+FISCAL_REV,BBGFS1,Q.BQ2180,Finanzielle Entwicklung der öffentlichen Haushalte - Einnahmen insgesamt,"quarterly -> quarter-end month (Mar/Jun/Sep/Dec), NaN elsewhere"
+FISCAL_EXP,BBGFS1,Q.BQ2190,Finanzielle Entwicklung der öffentlichen Haushalte - Ausgaben insgesamt,"quarterly -> quarter-end month (Mar/Jun/Sep/Dec), NaN elsewhere"
+GDP_REAL,BBNZ1,Q.DE.N.H.0000.A,Deutschland / Gesamtwirtschaftliche Übersicht / Bruttoinlandsprodukt / In verketteten Vorjahrespreisen (Kettenindex),"quarterly -> quarter-end month (Mar/Jun/Sep/Dec), NaN elsewhere"
+GDP_DEFLATOR,BBNZ1,A.DE.N.I.0000.A,Deutschland / Gesamtwirtschaftliche Übersicht / Bruttoinlandsprodukt / Preisindex,"annual -> year-end month (December), NaN elsewhere"
+CPI_HEADLINE,BBDP1,M.DE.Y.VPI.C.A00000.I20.A,Verbraucherpreisindex / Deutschland / kalender- und saisonbereinigt / Insgesamt,monthly (as published)
+CPI_CORE,BBDP1,M.DE.Y.VPI.C.XE0110.I20.A,Verbraucherpreisindex / Deutschland / kalender- und saisonbereinigt / Insgesamt ohne Energie und 01.1 Nahrungsmittel,monthly (as published)
+IP_EX_CONSTR,BBDE1,M.DE.W.BAA1.A2P100000.G.C.I21.A,Produktion im Produzierenden Gewerbe / Deutschland / Produzierendes Gewerbe ohne Bau (B - D) / nur kalenderbereinigt,monthly (as published)
+ORDERS_IND,BBDE1,M.DE.Y.AEA1.A2P300000.F.C.I21.A,Auftragseingang Insgesamt / in konstanten Preisen / Deutschland / Industrie / kalender- und saisonbereinigt,monthly (as published)
+RETAIL_SALES,BBDE1,M.DE.Y.GUA1.N2G470000.A.V.I21.A,Umsatz Insgesamt / in jeweiligen Preisen / Deutschland / 47 Einzelhandel (ohne Handel mit Kraftfahrzeugen) / kalender- und saisonbereinigt,monthly (as published)
+CAR_REG,BBDE1,M.DE.Y.KAA1.P2XC29000.KFZ.N.ABA.A,Kfz-Zulassungen / Deutschland / PKW/KOMBI insgesamt / kalender- und saisonbereinigt,monthly (as published)
+CAPU_MANU,BBXS1,Q.DE.S.EUBUCS.MANU.MAN013.TT.PCT.I00,Konjunkturumfrage bei Unternehmen und Verbrauchern (EU-Kommission) / Verarbeitendes Gewerbe / Kapazitätsauslastung / Deutschland / nur saisonbereinigt,"quarterly -> quarter-end month (Mar/Jun/Sep/Dec), NaN elsewhere"
+YIELD_10Y,BBSSY,D.REN.EUR.A630.000000WT1010.A,Rendite der jeweils jüngsten Bundesanleihe mit einer vereinbarten Laufzeit von 10 Jahren,daily -> monthly average
