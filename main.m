@@ -39,14 +39,31 @@ draws.forecasts_restand = draws.forecasts .* reshape(stdsQ, 1, options.Nq, 1) + 
 
 % Plots
 dataQ_restand = dataQ_stand .* stdsQ' + meansQ';
+dataM_restand = dataM_stand .* stdsM' + meansM';
 
-fiscal_idx = find(strcmp(groupsQ, 'fiscal'));
+fiscal_idx_M = find(strcmp(groupsM, 'fiscal'));
+fiscal_idx_Q = find(strcmp(groupsQ, 'fiscal'));
 
 fig_fiscal = figure;
-tiledlayout(length(fiscal_idx), 1, 'TileSpacing', 'compact', 'Padding', 'compact');
+tiledlayout(length(fiscal_idx_M) + length(fiscal_idx_Q), 1, 'TileSpacing', 'compact', 'Padding', 'compact');
 all_months = round((dates - floor(dates)) * 12) + 1;
-for k = 1 : length(fiscal_idx)
-    i = fiscal_idx(k);
+for k = 1 : length(fiscal_idx_M)
+    i = fiscal_idx_M(k);
+    nexttile;
+    idx_obs = find(~isnan(dataM_restand(i, :)));
+    plot(dates(idx_obs), dataM_restand(i, idx_obs), '-o', 'Color', 'k', ...
+         'LineWidth', 1.2, 'MarkerSize', 3);
+    title([groupsM{i}, ': ', namesM{i}], 'Interpreter', 'none');
+    ylabel('m/m (%)');
+    grid on;
+    ann_idx = find(all_months == 1 & dates >= dates(idx_obs(1)) & dates <= dates(idx_obs(end)));
+    xtick_pos = dates(ann_idx);
+    set(gca, 'XTick', xtick_pos, ...
+             'XTickLabel', arrayfun(@(d) sprintf('%d', floor(d)), xtick_pos, 'UniformOutput', false), ...
+             'XTickLabelRotation', 45);
+end
+for k = 1 : length(fiscal_idx_Q)
+    i = fiscal_idx_Q(k);
     nexttile;
     idx_obs = find(~isnan(dataQ_restand(i, :)));
     plot(dates(idx_obs), dataQ_restand(i, idx_obs), '-o', 'Color', 'k', ...
