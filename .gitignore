@@ -1,2 +1,5 @@
 # MATLAB autosave files
 *.asv
+
+# vendored binaries (downloaded by scripts, not tracked)
+tools/
