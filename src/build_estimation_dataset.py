@@ -20,7 +20,7 @@ natively observed at:
     quarterly series -- quarterly series are compressed to a true quarterly
     series for the X-13 step, then the growth rate is placed back on the
     monthly grid at the quarter-end month, NaN elsewhere)
-  - FIRST_DIFF_ONLY (IFO_BIZCLIMATE, BUND_YIELD_10Y): first difference, no SA
+  - FIRST_DIFF_ONLY (IFO_BIZCLIMATE_M, BUND_YIELD_10Y_M): first difference, no SA
   - everything else: growth rate (MoM or QoQ, as above), no SA
 
 Which mnemonics are quarterly-native is read from
@@ -52,16 +52,16 @@ SAMPLE_START = pd.Timestamp("1996-01-01")
 
 # Government revenue/expenditure series: the only ones seasonally adjusted.
 FISCAL_VARIABLES = {
-    "REV_GG_TAX_TOTAL",
-    "REV_CG_TOTAL",
-    "EXP_CG_TOTAL",
-    "EXP_GG_SA_TOTAL",
-    "REV_GG_SA_TOTAL",
+    "REV_GG_TAX_TOTAL_M",
+    "REV_CG_TOTAL_M",
+    "EXP_CG_TOTAL_M",
+    "EXP_GG_SA_TOTAL_Q",
+    "REV_GG_SA_TOTAL_Q",
 }
 
 # No seasonal adjustment: IFO_BIZCLIMATE is already SA at the source, and
 # interest rates have no seasonal pattern. Both are first-differenced.
-FIRST_DIFF_ONLY = {"IFO_BIZCLIMATE", "BUND_YIELD_10Y"}
+FIRST_DIFF_ONLY = {"IFO_BIZCLIMATE_M", "BUND_YIELD_10Y_M"}
 
 
 def monthly_growth(series: pd.Series, seasonal_adjust: bool) -> pd.Series:

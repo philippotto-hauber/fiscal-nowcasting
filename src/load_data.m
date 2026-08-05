@@ -1,73 +1,83 @@
-function [dataM_stand, dataQ_stand, means, stds, flag_usestartvals, names, groups, dates, vintagedate] = load_data(datapath, samplestart, vintagedate_str)
+function [dataM_stand, dataQ_stand, meansM, meansQ, stdsM, stdsQ, flag_usestartvalsM, flag_usestartvalsQ, namesM, namesQ, groupsM, groupsQ, dates, vintagedate] = load_data()
 
-[dataM_stand, dataQ_stand, means, stds, flag_usestartvals, names, groups, dates, vintagedate] = ...
-    f_constructdataset(datapath, samplestart, vintagedate_str, [], [], []);
+% Loads data/dataset_estimation.csv (built by src/build_estimation_dataset.py)
+% and returns the estimation inputs, split into monthly (M) and
+% quarterly-native (Q) series (frequency is read off each mnemonic's _M/_Q
+% suffix):
+%   dataM_stand, dataQ_stand   : standardized data, variables x time
+%   meansM/Q, stdsM/Q          : per-variable mean/std used to standardize
+%   flag_usestartvalsM/Q       : all zero (no starting-value source data
+%                                 exists for this dataset)
+%   namesM/Q                   : mnemonics from the CSV header
+%   groupsM/Q                  : 'fiscal' for REV_*/EXP_* mnemonics, 'macro'
+%                                 otherwise
+%   dates                      : 1 x T, year + (month-1)/12
+%   vintagedate                : datetime of the last (most recent) row in
+%                                 the CSV
 
-[dataM_stand, means, stds, names, groups, flag_usestartvals] = drop_variable(dataM_stand, means, stds, names, groups, flag_usestartvals, find(strcmp(names, 'Consumer: Confidence Indicator')));
-[dataM_stand, means, stds, names, groups, flag_usestartvals] = drop_variable(dataM_stand, means, stds, names, groups, flag_usestartvals, find(strcmp(names, 'Services: Current level of capacity utilization')));
+repo_root = fileparts(fileparts(mfilename('fullpath')));
+data_path = fullfile(repo_root, 'data', 'dataset_estimation.csv');
 
-% --- Bundesbank fiscal data (quarterly) -----------------------------------
-% BBGFS1.Q.BQ2180: Einnahmen insgesamt (total revenues)
-% BBGFS1.Q.BQ2190: Ausgaben insgesamt (total expenditures)
-api_base      = 'https://api.statistiken.bundesbank.de/rest/data/BBGFS1/';
-fiscal_series = {'Q.BQ2180', 'Q.BQ2190'};
-fiscal_names  = {'total revenues', 'total expenditures'};
+% ------------------------- %
+% - load csv --------------- %
 
-Nt           = size(dataM_stand, 2);
-dataQ_fiscal = NaN(2, Nt);
+opts = detectImportOptions(data_path);
+opts = setvartype(opts, opts.VariableNames{1}, 'char');
+T = readtable(data_path, opts);
 
-for s = 1 : 2
-    url      = [api_base, fiscal_series{s}, '?format=csv'];
-    tmp_file = [tempdir, 'bbk_fiscal_', num2str(s), '.csv'];
-    websave(tmp_file, url);
+dates_dt = datetime(T{:, 1}, 'InputFormat', 'yyyy-MM-dd');
+mnemonics = T.Properties.VariableNames(2:end);
+data = table2array(T(:, 2:end))';  % variables x time
 
-    % CSV has 10 metadata rows before data rows of the form 'YYYY-QN;value;'
-    fid = fopen(tmp_file, 'r', 'n', 'UTF-8');
-    for k = 1 : 10; fgetl(fid); end
-    raw = textscan(fid, '%s%f%*[^\n]', 'Delimiter', ';');
-    fclose(fid);
+% ------------------------------------------------- %
+% - split into monthly vs quarterly-native series - %
+% (frequency is read directly off each mnemonic's _M/_Q suffix)
 
-    dates_str = raw{1};
-    values    = raw{2};
-    n         = length(values);
+is_quarterly = endsWith(mnemonics, '_Q');
 
-    % 'YYYY-QN' -> quarter-end float (Q1->Mar, Q2->Jun, Q3->Sep, Q4->Dec)
-    dates_q = NaN(1, n);
-    for j = 1 : n
-        yr         = str2double(dates_str{j}(1:4));
-        q          = str2double(dates_str{j}(7));
-        dates_q(j) = yr + (q - 1) * 3 / 12 + 2/12;
-    end
+dataM = data(~is_quarterly, :);
+dataQ = data(is_quarterly, :);
 
-    % Year-over-year growth rate (4-quarter difference)
-    yy        = NaN(1, n);
-    yy(5:end) = (values(5:end) - values(1:end-4)) ./ values(1:end-4) * 100;
+namesM = mnemonics(~is_quarterly);
+namesQ = mnemonics(is_quarterly);
 
-    % Map onto the sample date grid (tolerance = half a month)
-    for j = 1 : n
-        idx = find(abs(dates - dates_q(j)) < 1/24, 1);
-        if ~isempty(idx)
-            dataQ_fiscal(s, idx) = yy(j);
-        end
-    end
+groupsM = cellfun(@f_group, namesM, 'UniformOutput', false);
+groupsQ = cellfun(@f_group, namesQ, 'UniformOutput', false);
+
+% -------------------------- %
+% - standardize ------------ %
+
+[dataM_stand, meansM, stdsM] = f_standardize(dataM);
+[dataQ_stand, meansQ, stdsQ] = f_standardize(dataQ);
+
+flag_usestartvalsM = zeros(1, numel(namesM));
+flag_usestartvalsQ = zeros(1, numel(namesQ));
+
+% -------------------------- %
+% - dates & vintage --------- %
+
+dates = (year(dates_dt) + (month(dates_dt) - 1) / 12)';
+vintagedate = dates_dt(end);
+
 end
 
-% Standardize and append to quarterly dataset
-means_fiscal       = NaN(1, 2);
-stds_fiscal        = NaN(1, 2);
-dataQ_fiscal_stand = NaN(2, Nt);
 
-for s = 1 : 2
-    means_fiscal(s)          = mean(dataQ_fiscal(s, :), 'omitnan');
-    stds_fiscal(s)           = std(dataQ_fiscal(s, :), 'omitnan');
-    dataQ_fiscal_stand(s, :) = (dataQ_fiscal(s, :) - means_fiscal(s)) / stds_fiscal(s);
+function group = f_group(mnemonic)
+if startsWith(mnemonic, 'REV_') || startsWith(mnemonic, 'EXP_')
+    group = 'fiscal';
+else
+    group = 'macro';
+end
 end
 
-dataQ_stand       = [dataQ_stand;       dataQ_fiscal_stand];
-means             = [means,             means_fiscal];
-stds              = [stds,              stds_fiscal];
-names             = [names,             fiscal_names];
-groups            = [groups,            {'fiscal', 'fiscal'}];
-flag_usestartvals = [flag_usestartvals, [0, 0]];
 
+function [data_stand, means, stds] = f_standardize(data)
+data_stand = NaN(size(data));
+means = NaN(1, size(data, 1));
+stds = NaN(1, size(data, 1));
+for n = 1 : size(data, 1)
+    means(n) = mean(data(n, :), 'omitnan');
+    stds(n) = std(data(n, :), 'omitnan');
+    data_stand(n, :) = (data(n, :) - means(n)) / stds(n);
+end
 end

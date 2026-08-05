@@ -3,3 +3,6 @@
 
 # vendored binaries (downloaded by scripts, not tracked)
 tools/
+
+# Office lock files
+~$*

@@ -1,4 +1,4 @@
-function plot_forecasts(draws, dataQ_restand, dates, options, names, groups, outpath, vars_to_plot, hist_start_year)
+function plot_forecasts(draws, dataQ_restand, dates, options, namesQ, groupsQ, outpath, vars_to_plot, hist_start_year)
 
 if nargin < 7
     outpath = '';
@@ -7,7 +7,6 @@ if nargin < 9 || isempty(hist_start_year)
     hist_start_year = -Inf;
 end
 
-namesQ = names(options.Nm + 1 : end);
 if nargin < 8 || isempty(vars_to_plot)
     plot_idx = 1 : options.Nq;
 else
@@ -88,7 +87,7 @@ for k = 1 : n_plots
     end
     set(gca, 'XTick', xtick_pos, 'XTickLabel', xtick_lbl, 'XTickLabelRotation', 45);
 
-    varname = [groups{options.Nm + i} ': ' names{options.Nm + i}];
+    varname = [groupsQ{i} ': ' namesQ{i}];
     title(varname, 'Interpreter', 'none');
     hold off;
 

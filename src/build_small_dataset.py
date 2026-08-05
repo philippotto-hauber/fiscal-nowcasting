@@ -32,19 +32,19 @@ DATA_START_ROW = 4  # 0-based row index where the first observation appears
 # (source description, mnemonic, transform)
 # transform is one of "M" (use as-is), "Q" (dequarter), "C" (decumulate).
 VARIABLES = [
-    ('General Government Budget, Revenues, Taxes, Total, EUR', 'REV_GG_TAX_TOTAL', 'M'),
-    ('Central Government Budget, Revenues, Total, Aggregate, EUR', 'REV_CG_TOTAL', 'C'),
-    ('Central Government Budget, Expenditures, Total, Aggregate, EUR', 'EXP_CG_TOTAL', 'C'),
-    ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, EUR', 'EXP_GG_SA_TOTAL', 'Q'),
-    ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, EUR', 'REV_GG_SA_TOTAL', 'Q'),
-    ('Business Surveys, Ifo, Business Survey, Total, Business Climate, Average, SA (X-13 ARIMA), Index', 'IFO_BIZCLIMATE', 'M'),
-    ('Implicit Price Deflator, Gross Domestic Product, Index', 'GDP_DEFLATOR', 'Q'),
-    ('Gross Domestic Product, Total, Real Terms, Constant Prices, Index', 'GDP_REAL', 'Q'),
-    ('Harmonized CPI, Total, Index', 'HICP_TOTAL', 'M'),
-    ('Industrial Production, Total, Excluding Construction, Constant Prices, Index', 'IP_TOTAL', 'M'),
-    ('Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Constant Prices, Index', 'RETAIL_TURNOVER', 'M'),
-    ('Domestic Trade, Vehicle Sales & Registrations, New Registrations, Motor Vehicles, Passenger Cars', 'AUTO_SALES', 'M'),
-    ('Government Benchmarks, Bundesbank, 10 Year, Yield, End of Period', 'BUND_YIELD_10Y', 'M'),
+    ('General Government Budget, Revenues, Taxes, Total, EUR', 'REV_GG_TAX_TOTAL_M', 'M'),
+    ('Central Government Budget, Revenues, Total, Aggregate, EUR', 'REV_CG_TOTAL_M', 'C'),
+    ('Central Government Budget, Expenditures, Total, Aggregate, EUR', 'EXP_CG_TOTAL_M', 'C'),
+    ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, EUR', 'EXP_GG_SA_TOTAL_Q', 'Q'),
+    ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, EUR', 'REV_GG_SA_TOTAL_Q', 'Q'),
+    ('Business Surveys, Ifo, Business Survey, Total, Business Climate, Average, SA (X-13 ARIMA), Index', 'IFO_BIZCLIMATE_M', 'M'),
+    ('Implicit Price Deflator, Gross Domestic Product, Index', 'GDP_DEFLATOR_Q', 'Q'),
+    ('Gross Domestic Product, Total, Real Terms, Constant Prices, Index', 'GDP_REAL_Q', 'Q'),
+    ('Harmonized CPI, Total, Index', 'HICP_TOTAL_M', 'M'),
+    ('Industrial Production, Total, Excluding Construction, Constant Prices, Index', 'IP_TOTAL_M', 'M'),
+    ('Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Constant Prices, Index', 'RETAIL_TURNOVER_M', 'M'),
+    ('Domestic Trade, Vehicle Sales & Registrations, New Registrations, Motor Vehicles, Passenger Cars', 'AUTO_SALES_M', 'M'),
+    ('Government Benchmarks, Bundesbank, 10 Year, Yield, End of Period', 'BUND_YIELD_10Y_M', 'M'),
 ]
 
 TRANSFORM_LABELS = {
