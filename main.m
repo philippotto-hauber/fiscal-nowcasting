@@ -4,8 +4,8 @@ addpath("data")
 addpath("src")
 
 % options
-options.Nburnin = 1000 ; % # of burn-ins
-options.Nreplic = 1000 ; % # of replics
+options.Nburnin = 5000 ; % # of burn-ins
+options.Nreplic = 5000 ; % # of replics
 options.Nthin = 10 ; % store each options.thinning-th draw
 options.Ndisplay = 1000 ;  % display each options.display-th iteration
 options.flag_samplemoments = 0;
@@ -17,7 +17,9 @@ options.Np = 3 ; % # of lags in factor VAR
 options.Nj = 0 ; % # of lags in eps
 
 % data
-[dataM_stand, dataQ_stand, meansM, meansQ, stdsM, stdsQ, flag_usestartvalsM, flag_usestartvalsQ, namesM, namesQ, groupsM, groupsQ, dates, vintagedate] = load_data();
+[~, dataQ_raw, ~, ~, ~, ~, dates_full, ~] = load_raw_data();
+[dataM_sa, dataQ_sa, namesM, namesQ, groupsM, groupsQ, dates, vintagedate] = load_sa_data();
+[dataM_stand, dataQ_stand, meansM, meansQ, stdsM, stdsQ, flag_usestartvalsM, flag_usestartvalsQ, dates] = f_growth_rates(dataM_sa, dataQ_sa, namesM, namesQ, dates);
 
 options.Nm = size(dataM_stand, 1);
 options.Nq = size(dataQ_stand, 1);
@@ -35,7 +37,9 @@ end
 % MCMC
 priors = loadpriors(options, options.priorswitch); 
 draws = GibbsSampler(dataM_stand, dataQ_stand, priors, options);
+
 draws.forecasts_restand = draws.forecasts .* reshape(stdsQ, 1, options.Nq, 1) + reshape(meansQ, 1, options.Nq, 1);
+forecasts_nsa = f_reseasonalize(draws, dataQ_raw, dataQ_sa, namesQ, dates_full);
 
 % Plots
 dataQ_restand = dataQ_stand .* stdsQ' + meansQ';
@@ -80,4 +84,4 @@ end
 exportgraphics(fig_fiscal, './output/fiscal_vars.png', 'Resolution', 150);
 
 plot_forecasts(draws, dataQ_restand, dates, options, namesQ, groupsQ, './output', ...
-               {'GDP_REAL_Q', 'EXP_GG_SA_TOTAL_Q', 'REV_GG_SA_TOTAL_Q'}, 2022);
+               {'GDP_REAL_Q', 'EXP_GG_TOTAL_Q', 'REV_GG_TOTAL_Q'}, 2022, forecasts_nsa, dataQ_raw, dates_full);

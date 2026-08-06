@@ -2,79 +2,66 @@
   "REV_GG_TAX_TOTAL_M": {
     "source_description": "General Government Budget, Revenues, Taxes, Total, EUR",
     "transform": "none (already monthly)",
-    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS",
-    "estimation_transform": "month-on-month growth rate (%), on seasonally adjusted series"
+    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS"
   },
   "REV_CG_TOTAL_M": {
     "source_description": "Central Government Budget, Revenues, Total, Aggregate, EUR",
     "transform": "decumulate (year-to-date -> monthly flow)",
-    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS",
-    "estimation_transform": "month-on-month growth rate (%), on seasonally adjusted series"
+    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS"
   },
   "EXP_CG_TOTAL_M": {
     "source_description": "Central Government Budget, Expenditures, Total, Aggregate, EUR",
     "transform": "decumulate (year-to-date -> monthly flow)",
-    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS",
-    "estimation_transform": "month-on-month growth rate (%), on seasonally adjusted series"
+    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS"
   },
-  "EXP_GG_SA_TOTAL_Q": {
+  "EXP_GG_TOTAL_Q": {
     "source_description": "Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, EUR",
     "transform": "dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)",
-    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS",
-    "estimation_transform": "quarter-on-quarter growth rate (%), on seasonally adjusted series"
+    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS"
   },
-  "REV_GG_SA_TOTAL_Q": {
+  "REV_GG_TOTAL_Q": {
     "source_description": "Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, EUR",
     "transform": "dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)",
-    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS",
-    "estimation_transform": "quarter-on-quarter growth rate (%), on seasonally adjusted series"
+    "estimation_seasonal_adjustment": "X-13ARIMA-SEATS"
   },
   "IFO_BIZCLIMATE_M": {
     "source_description": "Business Surveys, Ifo, Business Survey, Total, Business Climate, Average, SA (X-13 ARIMA), Index",
     "transform": "none (already monthly)",
-    "estimation_seasonal_adjustment": "none",
-    "estimation_transform": "first difference (level change)"
+    "estimation_seasonal_adjustment": "none"
   },
   "GDP_DEFLATOR_Q": {
     "source_description": "Implicit Price Deflator, Gross Domestic Product, Index",
     "transform": "dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)",
-    "estimation_seasonal_adjustment": "none (already SA at source / no seasonal pattern)",
-    "estimation_transform": "quarter-on-quarter growth rate (%)"
+    "estimation_seasonal_adjustment": "none"
   },
   "GDP_REAL_Q": {
     "source_description": "Gross Domestic Product, Total, Real Terms, Constant Prices, Index",
     "transform": "dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)",
-    "estimation_seasonal_adjustment": "none (already SA at source / no seasonal pattern)",
-    "estimation_transform": "quarter-on-quarter growth rate (%)"
+    "estimation_seasonal_adjustment": "none"
   },
   "HICP_TOTAL_M": {
     "source_description": "Harmonized CPI, Total, Index",
     "transform": "none (already monthly)",
-    "estimation_seasonal_adjustment": "none (already SA at source / no seasonal pattern)",
-    "estimation_transform": "month-on-month growth rate (%)"
+    "estimation_seasonal_adjustment": "none"
   },
   "IP_TOTAL_M": {
     "source_description": "Industrial Production, Total, Excluding Construction, Constant Prices, Index",
     "transform": "none (already monthly)",
-    "estimation_seasonal_adjustment": "none (already SA at source / no seasonal pattern)",
-    "estimation_transform": "month-on-month growth rate (%)"
+    "estimation_seasonal_adjustment": "none"
   },
   "RETAIL_TURNOVER_M": {
     "source_description": "Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Constant Prices, Index",
     "transform": "none (already monthly)",
-    "estimation_seasonal_adjustment": "none (already SA at source / no seasonal pattern)",
-    "estimation_transform": "month-on-month growth rate (%)"
+    "estimation_seasonal_adjustment": "none"
   },
   "AUTO_SALES_M": {
     "source_description": "Domestic Trade, Vehicle Sales & Registrations, New Registrations, Motor Vehicles, Passenger Cars",
     "transform": "none (already monthly)",
-    "estimation_seasonal_adjustment": "none (already SA at source / no seasonal pattern)",
-    "estimation_transform": "month-on-month growth rate (%)"
+    "estimation_seasonal_adjustment": "none"
   },
   "BUND_YIELD_10Y_M": {
     "source_description": "Government Benchmarks, Bundesbank, 10 Year, Yield, End of Period",
     "transform": "none (already monthly)",
-    "estimation_seasonal_adjustment": "none",
-    "estimation_transform": "first difference (level change)"
+    "estimation_seasonal_adjustment": "none"
   }
 }
