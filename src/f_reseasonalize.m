@@ -49,8 +49,6 @@ yr_all = floor(dates);
 mo_all = round((dates - yr_all) * 12) + 1;
 dates_dt = datetime(yr_all, mo_all, 1);
 
-Hq_max = size(draws.forecasts_restand, 1);
-
 forecasts_nsa = struct();
 for v = 1 : numel(TARGET_VARIABLES)
     mnemonic = TARGET_VARIABLES{v};
@@ -59,19 +57,9 @@ for v = 1 : numel(TARGET_VARIABLES)
         error('f_reseasonalize: %s not found among quarterly variables.', mnemonic);
     end
 
-    % --- anchor: last actual SA level and its date ---
-    idx_obs = find(~isnan(dataQ_sa(i, :)));
-    anchor_level = dataQ_sa(i, idx_obs(end));
-    anchor_date = dates_dt(idx_obs(end));
-
-    % --- forecast dates: next Hq_i quarters ---
-    Hq_i = draws.Hq(i);
-    j_start = Hq_max - Hq_i + 1;
-    forecast_dates = anchor_date + calmonths(3 * (1 : Hq_i));
-
-    % --- cumulate SA growth rate draws onto the anchor level ---
-    growth_draws = reshape(draws.forecasts_restand(j_start:Hq_max, i, :), Hq_i, []);  % Hq_i x Ndraws
-    levels_sa = anchor_level * cumprod(1 + growth_draws / 100, 1);
+    % --- cumulate SA growth rate draws onto the last actual SA level ---
+    [forecast_dates, levels_sa] = f_cumulate_level(draws, dataQ_sa, namesQ, dates_dt, mnemonic);
+    Hq_i = numel(forecast_dates);
 
     % --- seasonal factor per forecast quarter, extrapolated from history ---
     factor = NaN(1, Hq_i);

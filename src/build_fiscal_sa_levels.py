@@ -8,7 +8,7 @@ Reads data/trial_small_monthly.csv and writes:
 Only the 5 fiscal variables (government revenue/expenditure series) are
 processed; every other series in the dataset is either already seasonally
 adjusted at the source or has no seasonal pattern to remove, so MATLAB's
-f_seasonal_adjust.m just passes those through unchanged rather than needing
+load_sa_data.m just passes those through unchanged rather than needing
 anything from this script.
 
 Quarterly-native series (EXP_GG_TOTAL_Q, REV_GG_TOTAL_Q) are compressed to a
@@ -23,9 +23,13 @@ difference transforms and standardization now happen in MATLAB
 raw-level / SA-level is available there too, for reseasonalizing the model's
 forecasts of EXP_GG_TOTAL_Q and REV_GG_TOTAL_Q back to unadjusted levels.
 
-The dictionary's "estimation_transform" field (growth-rate description) is
-dropped since that step no longer happens here; "estimation_seasonal_
-adjustment" is kept/updated for all 13 mnemonics.
+The dictionary is updated for all 13 mnemonics with two fields describing
+that MATLAB-side transform:
+  - "seasonally_adjust": true for the 5 fiscal variables, false otherwise.
+  - "transform": "diff" for FIRST_DIFF_ONLY (already a rate/index, so
+    f_growth_rates.m first-differences it instead of taking a growth rate),
+    "percent change" for everything else, "level" for no transform (not
+    currently used by any mnemonic).
 
 Requires the X-13ARIMA-SEATS binary. This repo vendors it at
 tools/x13as/x13as.exe (downloaded from
@@ -55,6 +59,11 @@ FISCAL_VARIABLES = {
     "REV_GG_TOTAL_Q",
 }
 
+# Already a rate/index, not a flow -- f_growth_rates.m first-differences
+# these instead of taking a growth rate. Mirrors the MATLAB-side constant of
+# the same name in src/f_growth_rates.m.
+FIRST_DIFF_ONLY = {"IFO_BIZCLIMATE_M", "BUND_YIELD_10Y_M"}
+
 
 def monthly_sa(series: pd.Series) -> pd.Series:
     trimmed = series.dropna()
@@ -78,15 +87,17 @@ def build_sa_levels(dictionary: dict):
     out_columns = {}
     for mnemonic in data.columns:
         dictionary[mnemonic].pop("estimation_transform", None)
+        dictionary[mnemonic].pop("estimation_seasonal_adjustment", None)
+
+        dictionary[mnemonic]["seasonally_adjust"] = mnemonic in FISCAL_VARIABLES
+        dictionary[mnemonic]["transform"] = "diff" if mnemonic in FIRST_DIFF_ONLY else "percent change"
 
         if mnemonic not in FISCAL_VARIABLES:
-            dictionary[mnemonic]["estimation_seasonal_adjustment"] = "none"
             continue
 
         series = data[mnemonic]
-        is_quarterly = dictionary[mnemonic]["transform"].startswith("dequarter")
+        is_quarterly = mnemonic.endswith("_Q")
         out_columns[mnemonic] = quarterly_sa(series) if is_quarterly else monthly_sa(series)
-        dictionary[mnemonic]["estimation_seasonal_adjustment"] = "X-13ARIMA-SEATS"
 
     out = pd.DataFrame(out_columns)[[m for m in data.columns if m in FISCAL_VARIABLES]]
     out.index.name = "date"

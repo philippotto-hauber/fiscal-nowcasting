@@ -2,7 +2,8 @@
 
 Reads data/Fiscal_Macro_Dataset_trial_small.xlsx and writes:
   - data/trial_small_monthly.csv             (date + one column per mnemonic)
-  - data/trial_small_monthly_dictionary.json (mnemonic -> source description / transform)
+  - data/trial_small_monthly_dictionary.json (mnemonic -> source description /
+    decumulate)
 
 Variables are looked up by their source description string (the sheet has no
 duplicate descriptions, unlike the full trial spreadsheet, so each series is
@@ -10,9 +11,12 @@ uniquely identifiable by name alone). Two transforms are applied where
 needed:
   - "Q": series is quarterly but repeated across all 3 months of the quarter
          in the source file -> keep only the quarter-end (Mar/Jun/Sep/Dec)
-         observation, set the other two months to NaN.
+         observation, set the other two months to NaN. Not recorded as its
+         own dictionary field since it's already implied by the mnemonic's
+         _Q suffix.
   - "C": series is a monthly year-to-date cumulative flow -> decumulate to a
          genuine monthly flow (first differences within each calendar year).
+         Recorded as dictionary field "decumulate": true/false.
 """
 
 from pathlib import Path
@@ -46,13 +50,6 @@ VARIABLES = [
     ('Domestic Trade, Vehicle Sales & Registrations, New Registrations, Motor Vehicles, Passenger Cars', 'AUTO_SALES_M', 'M'),
     ('Government Benchmarks, Bundesbank, 10 Year, Yield, End of Period', 'BUND_YIELD_10Y_M', 'M'),
 ]
-
-TRANSFORM_LABELS = {
-    "M": "none (already monthly)",
-    "Q": "dequarter (keep Mar/Jun/Sep/Dec, NaN elsewhere)",
-    "C": "decumulate (year-to-date -> monthly flow)",
-}
-
 
 def dequarter(series: pd.Series) -> pd.Series:
     """Keep only the quarter-end (Mar/Jun/Sep/Dec) observation each quarter."""
@@ -108,7 +105,7 @@ def build_dataset():
         out_columns[mnemonic] = series
         dictionary[mnemonic] = {
             "source_description": source_name,
-            "transform": TRANSFORM_LABELS[transform],
+            "decumulate": transform == "C",
         }
 
     out = pd.DataFrame(out_columns)

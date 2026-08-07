@@ -39,6 +39,9 @@ priors = loadpriors(options, options.priorswitch);
 draws = GibbsSampler(dataM_stand, dataQ_stand, priors, options);
 
 draws.forecasts_restand = draws.forecasts .* reshape(stdsQ, 1, options.Nq, 1) + reshape(meansQ, 1, options.Nq, 1);
+
+% Forecasts: nominal GDP and original unadjusted (NSA) expenditures/revenues
+forecasts_ngdp = f_nominal_gdp(draws, dataQ_sa, namesQ, dates_full);
 forecasts_nsa = f_reseasonalize(draws, dataQ_raw, dataQ_sa, namesQ, dates_full);
 
 % Plots
