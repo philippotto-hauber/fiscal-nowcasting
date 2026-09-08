@@ -17,6 +17,12 @@ needed:
   - "C": series is a monthly year-to-date cumulative flow -> decumulate to a
          genuine monthly flow (first differences within each calendar year).
          Recorded as dictionary field "decumulate": true/false.
+
+Also records "publication_delay": the typical number of days between the end
+of a reference period and the statistical release covering it (i.e. how
+stale a given real-time observation is), used for real-time nowcasting
+timing. Values were either given directly or looked up from Destatis/
+Eurostat release schedules -- see the VARIABLES table below for sources.
 """
 
 from pathlib import Path
@@ -33,22 +39,40 @@ OUT_DICT_PATH = REPO_ROOT / "data" / "trial_small_monthly_dictionary.json"
 HEADER_ROW = 3  # 0-based row index (in the raw sheet) holding variable descriptions
 DATA_START_ROW = 4  # 0-based row index where the first observation appears
 
-# (source description, mnemonic, transform)
+# (source description, mnemonic, transform, publication_delay)
 # transform is one of "M" (use as-is), "Q" (dequarter), "C" (decumulate).
+# publication_delay is in days after the end of the reference period:
+#   REV/EXP _M    : given (20d, monthly fiscal cash-budget releases)
+#   REV/EXP _Q    : looked up -- Destatis's "detailed" quarterly sector
+#                   accounts results, released ~t+55 (matches the "Detailed"
+#                   label in the source description; the EU/Eurostat
+#                   transmission deadline is a slower t+85-112)
+#   IFO_BIZCLIMATE: given (25d)
+#   GDP_DEFLATOR_Q: given (45d)
+#   GDP_REAL_Q    : given (30d)
+#   HICP_TOTAL_M  : looked up -- final HICP published "by the middle of the
+#                   following month" (Destatis)
+#   IP_TOTAL_M    : looked up -- e.g. Oct 2025 production data published
+#                   2025-12-08, a 38-day lag (Destatis press release)
+#   RETAIL_TURNOVER_M : looked up -- e.g. Oct 2025 retail turnover published
+#                   2025-11-28, a 28-day lag (Destatis press release)
+#   AUTO_SALES_M  : looked up -- KBA new-registration press releases land on
+#                   the 1st-7th of the following month (~3-7 day lag)
+#   BUND_YIELD_10Y: given (1d)
 VARIABLES = [
-    ('General Government Budget, Revenues, Taxes, Total, EUR', 'REV_GG_TAX_TOTAL_M', 'M'),
-    ('Central Government Budget, Revenues, Total, Aggregate, EUR', 'REV_CG_TOTAL_M', 'C'),
-    ('Central Government Budget, Expenditures, Total, Aggregate, EUR', 'EXP_CG_TOTAL_M', 'C'),
-    ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, EUR', 'EXP_GG_TOTAL_Q', 'Q'),
-    ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, EUR', 'REV_GG_TOTAL_Q', 'Q'),
-    ('Business Surveys, Ifo, Business Survey, Total, Business Climate, Average, SA (X-13 ARIMA), Index', 'IFO_BIZCLIMATE_M', 'M'),
-    ('Implicit Price Deflator, Gross Domestic Product, Index', 'GDP_DEFLATOR_Q', 'Q'),
-    ('Gross Domestic Product, Total, Real Terms, Constant Prices, Index', 'GDP_REAL_Q', 'Q'),
-    ('Harmonized CPI, Total, Index', 'HICP_TOTAL_M', 'M'),
-    ('Industrial Production, Total, Excluding Construction, Constant Prices, Index', 'IP_TOTAL_M', 'M'),
-    ('Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Constant Prices, Index', 'RETAIL_TURNOVER_M', 'M'),
-    ('Domestic Trade, Vehicle Sales & Registrations, New Registrations, Motor Vehicles, Passenger Cars', 'AUTO_SALES_M', 'M'),
-    ('Government Benchmarks, Bundesbank, 10 Year, Yield, End of Period', 'BUND_YIELD_10Y_M', 'M'),
+    ('General Government Budget, Revenues, Taxes, Total, EUR', 'REV_GG_TAX_TOTAL_M', 'M', 20),
+    ('Central Government Budget, Revenues, Total, Aggregate, EUR', 'REV_CG_TOTAL_M', 'C', 20),
+    ('Central Government Budget, Expenditures, Total, Aggregate, EUR', 'EXP_CG_TOTAL_M', 'C', 20),
+    ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, EUR', 'EXP_GG_TOTAL_Q', 'Q', 55),
+    ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, EUR', 'REV_GG_TOTAL_Q', 'Q', 55),
+    ('Business Surveys, Ifo, Business Survey, Total, Business Climate, Average, SA (X-13 ARIMA), Index', 'IFO_BIZCLIMATE_M', 'M', 25),
+    ('Implicit Price Deflator, Gross Domestic Product, Index', 'GDP_DEFLATOR_Q', 'Q', 45),
+    ('Gross Domestic Product, Total, Real Terms, Constant Prices, Index', 'GDP_REAL_Q', 'Q', 30),
+    ('Harmonized CPI, Total, Index', 'HICP_TOTAL_M', 'M', 15),
+    ('Industrial Production, Total, Excluding Construction, Constant Prices, Index', 'IP_TOTAL_M', 'M', 40),
+    ('Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Constant Prices, Index', 'RETAIL_TURNOVER_M', 'M', 30),
+    ('Domestic Trade, Vehicle Sales & Registrations, New Registrations, Motor Vehicles, Passenger Cars', 'AUTO_SALES_M', 'M', 5),
+    ('Government Benchmarks, Bundesbank, 10 Year, Yield, End of Period', 'BUND_YIELD_10Y_M', 'M', 1),
 ]
 
 def dequarter(series: pd.Series) -> pd.Series:
@@ -95,7 +119,7 @@ def build_dataset():
 
     out_columns = {}
     dictionary = {}
-    for source_name, mnemonic, transform in VARIABLES:
+    for source_name, mnemonic, transform, publication_delay in VARIABLES:
         col_idx = names.index(source_name)
         series = data[col_idx]
         if transform == "Q":
@@ -106,6 +130,7 @@ def build_dataset():
         dictionary[mnemonic] = {
             "source_description": source_name,
             "decumulate": transform == "C",
+            "publication_delay": publication_delay,
         }
 
     out = pd.DataFrame(out_columns)
