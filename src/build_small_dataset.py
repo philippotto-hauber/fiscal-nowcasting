@@ -50,15 +50,31 @@ DATA_START_ROW = 4  # 0-based row index where the first observation appears
 #   IFO_BIZCLIMATE: given (25d)
 #   GDP_DEFLATOR_Q: given (45d)
 #   GDP_REAL_Q    : given (30d)
-#   HICP_TOTAL_M  : looked up -- final HICP published "by the middle of the
-#                   following month" (Destatis)
+#   GDP_NOMINAL_Q : assumed same as GDP_REAL_Q -- both released in the same
+#                   Destatis national-accounts release
+#   HICP_TOTAL_M  : looked up -- final CPI published "by the middle of the
+#                   following month" (Destatis); source description now
+#                   points at the Bundesbank national CPI, overall index,
+#                   rather than the old Eurostat-harmonized HICP, since the
+#                   source sheet only carries the former -- mnemonic kept
+#                   unchanged for continuity
+#   CPI_CORE_M    : assumed same release schedule as HICP_TOTAL_M (published
+#                   together)
 #   IP_TOTAL_M    : looked up -- e.g. Oct 2025 production data published
 #                   2025-12-08, a 38-day lag (Destatis press release)
+#   NEW_ORDERS_MANUF_M : assumed same as IP_TOTAL_M -- both released together
+#                   in Destatis's manufacturing turnover/orders release
 #   RETAIL_TURNOVER_M : looked up -- e.g. Oct 2025 retail turnover published
 #                   2025-11-28, a 28-day lag (Destatis press release)
 #   AUTO_SALES_M  : looked up -- KBA new-registration press releases land on
 #                   the 1st-7th of the following month (~3-7 day lag)
 #   BUND_YIELD_10Y: given (1d)
+#   EXP_BA_TOTAL_M / REV_BA_CONTRIB_M : assumed same as REV/EXP_CG_TOTAL_M
+#                   (20d) -- monthly Bundesbank public-finance cash
+#                   statistics, same reporting cadence as the central
+#                   government budget series; unlike those two, plotted
+#                   values are already genuine monthly flows (not YTD
+#                   cumulative), so no decumulation is applied here
 VARIABLES = [
     ('General Government Budget, Revenues, Taxes, Total, EUR', 'REV_GG_TAX_TOTAL_M', 'M', 20),
     ('Central Government Budget, Revenues, Total, Aggregate, EUR', 'REV_CG_TOTAL_M', 'C', 20),
@@ -66,13 +82,18 @@ VARIABLES = [
     ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, EUR', 'EXP_GG_TOTAL_Q', 'Q', 55),
     ('Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, EUR', 'REV_GG_TOTAL_Q', 'Q', 55),
     ('Business Surveys, Ifo, Business Survey, Total, Business Climate, Average, SA (X-13 ARIMA), Index', 'IFO_BIZCLIMATE_M', 'M', 25),
-    ('Implicit Price Deflator, Gross Domestic Product, Index', 'GDP_DEFLATOR_Q', 'Q', 45),
-    ('Gross Domestic Product, Total, Real Terms, Constant Prices, Index', 'GDP_REAL_Q', 'Q', 30),
-    ('Harmonized CPI, Total, Index', 'HICP_TOTAL_M', 'M', 15),
-    ('Industrial Production, Total, Excluding Construction, Constant Prices, Index', 'IP_TOTAL_M', 'M', 40),
-    ('Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Constant Prices, Index', 'RETAIL_TURNOVER_M', 'M', 30),
+    ('Implicit Price Deflator, Gross Domestic Product, SA (X13 JDemetra+), Index', 'GDP_DEFLATOR_Q', 'Q', 45),
+    ('Gross Domestic Product, Total, Calendar Adjusted (X13 JDemetra+), Constant Prices, SA (X13 JDemetra+), Chained, Index', 'GDP_REAL_Q', 'Q', 30),
+    ('Gross Domestic Product, Total, Calendar Adjusted (X-13 ARIMA), Current Prices, SA (X-13 ARIMA), EUR', 'GDP_NOMINAL_Q', 'Q', 30),
+    ('Bundesbank, Consumer Price Index, Consumer Price Index, Germany, Overall Index, Calendar Adjusted, SA, Index', 'HICP_TOTAL_M', 'M', 15),
+    ('Bundesbank, Consumer Price Index, Germany, All-Items Excluding Energy & 01.1 Food Products, Calendar Adjusted, SA, Index', 'CPI_CORE_M', 'M', 15),
+    ('Industrial Production, Total, Excluding Construction, Calendar Adjusted (X13 JDemetra+), Constant Prices, SA (X13 JDemetra+), Index', 'IP_TOTAL_M', 'M', 40),
+    ('New Orders, Manufacturing, Total (Excluding Other Vehicle Construction), Calendar Adjusted (X13 JDemetra+), Constant Prices, SA (X13 JDemetra+), Index', 'NEW_ORDERS_MANUF_M', 'M', 40),
+    ('Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Calendar Adjusted (X13 JDemetra+), Constant Prices, SA (X13 JDemetra+), Index', 'RETAIL_TURNOVER_M', 'M', 30),
     ('Domestic Trade, Vehicle Sales & Registrations, New Registrations, Motor Vehicles, Passenger Cars', 'AUTO_SALES_M', 'M', 5),
     ('Government Benchmarks, Bundesbank, 10 Year, Yield, End of Period', 'BUND_YIELD_10Y_M', 'M', 1),
+    ('Bundesbank, Federal Employment Agency - Expenditure - Total, EUR', 'EXP_BA_TOTAL_M', 'M', 20),
+    ('Bundesbank, Federal Employment Agency - Revenue - Contributions, EUR', 'REV_BA_CONTRIB_M', 'M', 20),
 ]
 
 def dequarter(series: pd.Series) -> pd.Series:

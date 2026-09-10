@@ -23,54 +23,75 @@
   "EXP_GG_TOTAL_Q": {
     "source_description": "Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Expenditure, EUR",
     "decumulate": false,
-    "publication_delay": false,
+    "publication_delay": 55,
     "seasonally_adjust": true,
     "transform": "percent change"
   },
   "REV_GG_TOTAL_Q": {
     "source_description": "Sector Accounts, General Government, Detailed, Revenue & Expenditure & Net Lending/Net Borrowing, Revenue, EUR",
     "decumulate": false,
-    "publication_delay": false,
+    "publication_delay": 55,
     "seasonally_adjust": true,
     "transform": "percent change"
   },
   "IFO_BIZCLIMATE_M": {
     "source_description": "Business Surveys, Ifo, Business Survey, Total, Business Climate, Average, SA (X-13 ARIMA), Index",
     "decumulate": false,
-    "publication_delay": -5,
+    "publication_delay": 25,
     "seasonally_adjust": false,
     "transform": "diff"
   },
   "GDP_DEFLATOR_Q": {
-    "source_description": "Implicit Price Deflator, Gross Domestic Product, Index",
+    "source_description": "Implicit Price Deflator, Gross Domestic Product, SA (X13 JDemetra+), Index",
     "decumulate": false,
     "publication_delay": 45,
     "seasonally_adjust": false,
     "transform": "percent change"
   },
   "GDP_REAL_Q": {
-    "source_description": "Gross Domestic Product, Total, Real Terms, Constant Prices, Index",
+    "source_description": "Gross Domestic Product, Total, Calendar Adjusted (X13 JDemetra+), Constant Prices, SA (X13 JDemetra+), Chained, Index",
+    "decumulate": false,
+    "publication_delay": 30,
+    "seasonally_adjust": false,
+    "transform": "percent change"
+  },
+  "GDP_NOMINAL_Q": {
+    "source_description": "Gross Domestic Product, Total, Calendar Adjusted (X-13 ARIMA), Current Prices, SA (X-13 ARIMA), EUR",
     "decumulate": false,
     "publication_delay": 30,
     "seasonally_adjust": false,
     "transform": "percent change"
   },
   "HICP_TOTAL_M": {
-    "source_description": "Harmonized CPI, Total, Index",
+    "source_description": "Bundesbank, Consumer Price Index, Consumer Price Index, Germany, Overall Index, Calendar Adjusted, SA, Index",
+    "decumulate": false,
+    "publication_delay": 15,
+    "seasonally_adjust": false,
+    "transform": "percent change"
+  },
+  "CPI_CORE_M": {
+    "source_description": "Bundesbank, Consumer Price Index, Germany, All-Items Excluding Energy & 01.1 Food Products, Calendar Adjusted, SA, Index",
     "decumulate": false,
     "publication_delay": 15,
     "seasonally_adjust": false,
     "transform": "percent change"
   },
   "IP_TOTAL_M": {
-    "source_description": "Industrial Production, Total, Excluding Construction, Constant Prices, Index",
+    "source_description": "Industrial Production, Total, Excluding Construction, Calendar Adjusted (X13 JDemetra+), Constant Prices, SA (X13 JDemetra+), Index",
+    "decumulate": false,
+    "publication_delay": 40,
+    "seasonally_adjust": false,
+    "transform": "percent change"
+  },
+  "NEW_ORDERS_MANUF_M": {
+    "source_description": "New Orders, Manufacturing, Total (Excluding Other Vehicle Construction), Calendar Adjusted (X13 JDemetra+), Constant Prices, SA (X13 JDemetra+), Index",
     "decumulate": false,
     "publication_delay": 40,
     "seasonally_adjust": false,
     "transform": "percent change"
   },
   "RETAIL_TURNOVER_M": {
-    "source_description": "Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Constant Prices, Index",
+    "source_description": "Domestic Trade, Retail Trade, Turnover, Total, Excluding Vehicle Trade, Calendar Adjusted (X13 JDemetra+), Constant Prices, SA (X13 JDemetra+), Index",
     "decumulate": false,
     "publication_delay": 30,
     "seasonally_adjust": false,
@@ -89,5 +110,19 @@
     "publication_delay": 1,
     "seasonally_adjust": false,
     "transform": "diff"
+  },
+  "EXP_BA_TOTAL_M": {
+    "source_description": "Bundesbank, Federal Employment Agency - Expenditure - Total, EUR",
+    "decumulate": false,
+    "publication_delay": 20,
+    "seasonally_adjust": false,
+    "transform": "percent change"
+  },
+  "REV_BA_CONTRIB_M": {
+    "source_description": "Bundesbank, Federal Employment Agency - Revenue - Contributions, EUR",
+    "decumulate": false,
+    "publication_delay": 20,
+    "seasonally_adjust": false,
+    "transform": "percent change"
   }
 }
