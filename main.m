@@ -16,10 +16,16 @@ options.Ns = options.Nr ; % # of static factors
 options.Np = 3 ; % # of lags in factor VAR
 options.Nj = 0 ; % # of lags in eps
 
+% Nominal GDP (raw EUR, NOT EUR millions -- must match the units of
+% EXP_GG_TOTAL_Q/REV_GG_TOTAL_Q in dataQ_sa) for the last actual quarter of
+% GDP_REAL_Q/GDP_DEFLATOR_Q -- used by f_postprocess_draws.m to rescale its
+% implied nominal GDP index onto EUR.
+options.anchor_ngdp_eur = 1171696e6 ;
+
 % data
 [~, dataQ_raw, ~, ~, ~, ~, dates_full, ~] = load_raw_data();
-[dataM_sa, dataQ_sa, namesM, namesQ, groupsM, groupsQ, dates, vintagedate] = load_sa_data();
-[dataM_stand, dataQ_stand, meansM, meansQ, stdsM, stdsQ, flag_usestartvalsM, flag_usestartvalsQ, dates] = f_growth_rates(dataM_sa, dataQ_sa, namesM, namesQ, dates);
+[dataM_sa, dataQ_sa, namesM, namesQ, ~, ~, dates, vintagedate] = load_sa_data();
+[dataM_stand, dataQ_stand, ~, meansQ, ~, stdsQ, flag_usestartvalsM, flag_usestartvalsQ, dates] = f_growth_rates(dataM_sa, dataQ_sa, namesM, namesQ, dates);
 
 options.Nm = size(dataM_stand, 1);
 options.Nq = size(dataQ_stand, 1);
@@ -40,51 +46,12 @@ draws = GibbsSampler(dataM_stand, dataQ_stand, priors, options);
 
 draws.forecasts_restand = draws.forecasts .* reshape(stdsQ, 1, options.Nq, 1) + reshape(meansQ, 1, options.Nq, 1);
 
-% Forecasts: nominal GDP and original unadjusted (NSA) expenditures/revenues
-forecasts_ngdp = f_nominal_gdp(draws, dataQ_sa, namesQ, dates_full);
+% Forecasts: nominal GDP, GG fiscal balance (% of GDP), and original
+% unadjusted (NSA) expenditures/revenues
+postproc = f_postprocess_draws(draws, dataQ_sa, namesQ, dates_full, options.anchor_ngdp_eur);
 forecasts_nsa = f_reseasonalize(draws, dataQ_raw, dataQ_sa, namesQ, dates_full);
 
 % Plots
 dataQ_restand = dataQ_stand .* stdsQ' + meansQ';
-dataM_restand = dataM_stand .* stdsM' + meansM';
 
-fiscal_idx_M = find(strcmp(groupsM, 'fiscal'));
-fiscal_idx_Q = find(strcmp(groupsQ, 'fiscal'));
-
-fig_fiscal = figure;
-tiledlayout(length(fiscal_idx_M) + length(fiscal_idx_Q), 1, 'TileSpacing', 'compact', 'Padding', 'compact');
-all_months = round((dates - floor(dates)) * 12) + 1;
-for k = 1 : length(fiscal_idx_M)
-    i = fiscal_idx_M(k);
-    nexttile;
-    idx_obs = find(~isnan(dataM_restand(i, :)));
-    plot(dates(idx_obs), dataM_restand(i, idx_obs), '-o', 'Color', 'k', ...
-         'LineWidth', 1.2, 'MarkerSize', 3);
-    title([groupsM{i}, ': ', namesM{i}], 'Interpreter', 'none');
-    ylabel('m/m (%)');
-    grid on;
-    ann_idx = find(all_months == 1 & dates >= dates(idx_obs(1)) & dates <= dates(idx_obs(end)));
-    xtick_pos = dates(ann_idx);
-    set(gca, 'XTick', xtick_pos, ...
-             'XTickLabel', arrayfun(@(d) sprintf('%d', floor(d)), xtick_pos, 'UniformOutput', false), ...
-             'XTickLabelRotation', 45);
-end
-for k = 1 : length(fiscal_idx_Q)
-    i = fiscal_idx_Q(k);
-    nexttile;
-    idx_obs = find(~isnan(dataQ_restand(i, :)));
-    plot(dates(idx_obs), dataQ_restand(i, idx_obs), '-o', 'Color', 'k', ...
-         'LineWidth', 1.2, 'MarkerSize', 3);
-    title([groupsQ{i}, ': ', namesQ{i}], 'Interpreter', 'none');
-    ylabel('q/q (%)');
-    grid on;
-    ann_idx = find(all_months == 1 & dates >= dates(idx_obs(1)) & dates <= dates(idx_obs(end)));
-    xtick_pos = dates(ann_idx);
-    set(gca, 'XTick', xtick_pos, ...
-             'XTickLabel', arrayfun(@(d) sprintf('%dQ1', floor(d)), xtick_pos, 'UniformOutput', false), ...
-             'XTickLabelRotation', 45);
-end
-exportgraphics(fig_fiscal, './output/fiscal_vars.png', 'Resolution', 150);
-
-plot_forecasts(draws, dataQ_restand, dates, options, namesQ, groupsQ, './output', ...
-               {'GDP_REAL_Q', 'EXP_GG_TOTAL_Q', 'REV_GG_TOTAL_Q'}, 2022, forecasts_nsa, dataQ_raw, dates_full);
+plot_gdp_deficit(draws, postproc, dataQ_restand, dates, namesQ, './output', 2022);
