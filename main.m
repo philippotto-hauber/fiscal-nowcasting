@@ -66,3 +66,5 @@ forecasts_nsa = f_reseasonalize(draws, dataQ_raw, dataQ_sa, namesQ, dates_full);
 dataQ_restand = dataQ_stand .* stdsQ' + meansQ';
 
 plot_gdp_deficit(draws, postproc, dataQ_restand, dates, namesQ, './output', 2022);
+write_forecast_summary(draws, postproc, dataQ_restand, dates, namesQ, './output');
+plot_annual_balance(postproc, dataQ_sa, namesQ, ngdp_raw_eur, dates_full, './output');
