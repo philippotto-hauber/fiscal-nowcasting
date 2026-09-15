@@ -1,17 +1,18 @@
 function plot_gdp_deficit(draws, postproc, dataQ_restand, dates, namesQ, outpath, hist_start_year)
 
-% Plots two fan charts (as tiles in one figure): real GDP q/q growth
-% (history + forecast) and the general government fiscal balance as a
-% percent of nominal GDP (forecast only -- it is a derived quantity with no
-% historical series of its own; see f_postprocess_draws.m).
+% Plots two fan charts (as tiles in one figure), both history + forecast:
+% real GDP q/q growth and the general government fiscal balance as a
+% percent of nominal GDP (see f_postprocess_draws.m for how the historical
+% and forecast ratios are derived).
 %
 % Inputs:
 %   draws            : must have fields .forecasts_restand (Hq_max x Nq x
 %                       Ndraws, destandardized q/q growth rate (%)
 %                       forecasts) and .Hq (1 x Nq, per-variable forecast
 %                       horizon in quarters) -- both set by GibbsSampler.m.
-%   postproc         : output of f_postprocess_draws.m; only
-%                       .balance_to_gdp (.dates, .ratio_pct) is used here.
+%   postproc         : output of f_postprocess_draws.m; only .balance_to_gdp
+%                       (.dates, .ratio_pct, .hist_dates_dt,
+%                       .hist_ratio_pct) is used here.
 %   dataQ_restand    : destandardized quarterly SA q/q growth rates,
 %                       variables x time (dataQ_stand .* stdsQ' + meansQ',
 %                       as computed in main.m).
@@ -68,10 +69,16 @@ title('Real GDP', 'Interpreter', 'none');
 ylabel('q/q (%)');
 leg_handles = [hhist, hmed, h50, h95];
 
-% --- tile 2: GG fiscal balance, % of nominal GDP, forecast only -----------
+% --- tile 2: GG fiscal balance, % of nominal GDP, history + forecast ------
 nexttile;
+hist_dates_bal = postproc.balance_to_gdp.hist_dates_dt;
+hist_vals_bal  = postproc.balance_to_gdp.hist_ratio_pct;
+hist_years_bal = year(hist_dates_bal) + (month(hist_dates_bal) - 1) / 12;
+idx_hist_bal   = find(~isnan(hist_vals_bal) & hist_years_bal >= hist_start_year);
+
 balance_pctiles = prctile(postproc.balance_to_gdp.ratio_pct, [2.5 25 50 75 97.5], 2);
-f_plot_fan([], [], postproc.balance_to_gdp.dates, balance_pctiles);
+f_plot_fan(hist_dates_bal(idx_hist_bal), hist_vals_bal(idx_hist_bal), ...
+           postproc.balance_to_gdp.dates, balance_pctiles);
 title('General government balance, % of nominal GDP', 'Interpreter', 'none');
 ylabel('% of GDP');
 

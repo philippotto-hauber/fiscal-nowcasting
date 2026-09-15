@@ -1,22 +1,24 @@
-function postproc = f_postprocess_draws(draws, dataQ, namesQ, dates, anchor_ngdp_eur)
+function postproc = f_postprocess_draws(draws, dataQ, namesQ, dates, ngdp_raw_eur)
 
 % Post-processes MCMC forecast draws into two derived quantities, for every
 % draw:
 %   i)  nominal GDP (reuses f_nominal_gdp.m as-is), rescaled from an implied
-%       index onto a EUR level using a caller-supplied anchor.
+%       index onto a EUR level using an anchor read off ngdp_raw_eur.
 %   ii) the general government fiscal balance (REV_GG_TOTAL_Q -
-%       EXP_GG_TOTAL_Q; positive = surplus) as a percent of that nominal GDP.
+%       EXP_GG_TOTAL_Q; positive = surplus) as a percent of that nominal
+%       GDP, both as a forecast (from the MCMC draws) and, using the same
+%       definition, as actual history (no draws involved).
 %
 % Background on the GDP rescaling: f_nominal_gdp.m combines the model's
 % forecasts for GDP_REAL_Q and GDP_DEFLATOR_Q -- both index series in this
-% dataset, with no EUR-denominated nominal GDP series available -- via
-% nominal = real x deflator / 100. That produces an implied nominal GDP
-% INDEX, not a EUR amount, so it cannot be used to form a genuine
-% balance-to-GDP percentage on its own. This function rescales that index
-% onto EUR terms using anchor_ngdp_eur, an externally supplied nominal GDP
-% level (EUR) for the last actual (pre-forecast) quarter of GDP_REAL_Q /
-% GDP_DEFLATOR_Q -- e.g. looked up from Destatis/Bundesbank for that
-% specific quarter. The scale factor is
+% dataset, with no EUR-denominated nominal GDP series among the *estimated*
+% variables -- via nominal = real x deflator / 100. That produces an
+% implied nominal GDP INDEX, not a EUR amount, so it cannot be used to form
+% a genuine balance-to-GDP percentage on its own. This function rescales
+% that index onto EUR terms using an anchor: the latest actual level in
+% ngdp_raw_eur (GDP_NOMINAL_Q, raw EUR -- see main.m; kept out of the
+% estimated dataset itself, but still loaded for this purpose). The scale
+% factor is
 %   anchor_ngdp_eur / (last actual GDP_REAL_Q level x last actual
 %                       GDP_DEFLATOR_Q level / 100)
 % applied uniformly to every forecast quarter and draw. This is a levels
@@ -25,27 +27,29 @@ function postproc = f_postprocess_draws(draws, dataQ, namesQ, dates, anchor_ngdp
 % horizon.
 %
 % Inputs:
-%   draws           : must have fields .forecasts_restand (Hq_max x Nq x
-%                      Ndraws, destandardized q/q growth rate (%) forecasts,
-%                      as computed in main.m) and .Hq (1 x Nq, per-variable
-%                      forecast horizon in quarters) -- both set by
-%                      GibbsSampler.m.
-%   dataQ           : quarterly levels, variables x time. Seasonally
-%                      adjusted (dataQ_sa from load_sa_data()) is what main.m
-%                      passes in -- GDP_REAL_Q/GDP_DEFLATOR_Q are unaffected
-%                      either way since neither is SA in this pipeline, and
-%                      the fiscal balance is computed on SA levels to match.
-%   namesQ          : quarterly mnemonics matching dataQ's rows and draws'
-%                      columns.
-%   dates           : 1 x T, year + (month-1)/12, matching dataQ's time axis
-%                      (e.g. load_raw_data()'s dates_full, per main.m).
-%   anchor_ngdp_eur : scalar, nominal GDP for the last actual quarter of
-%                      GDP_REAL_Q / GDP_DEFLATOR_Q in dataQ, in the SAME
-%                      units as EXP_GG_TOTAL_Q/REV_GG_TOTAL_Q in dataQ --
-%                      raw EUR in this dataset, NOT EUR millions (a mismatch
-%                      here silently produces a balance-to-GDP ratio too
-%                      large by a factor of 1e6). Supplied by the caller
-%                      (main.m); not derivable from this dataset.
+%   draws        : must have fields .forecasts_restand (Hq_max x Nq x
+%                   Ndraws, destandardized q/q growth rate (%) forecasts,
+%                   as computed in main.m) and .Hq (1 x Nq, per-variable
+%                   forecast horizon in quarters) -- both set by
+%                   GibbsSampler.m.
+%   dataQ        : quarterly levels, variables x time. Seasonally adjusted
+%                   (dataQ_sa from load_sa_data()) is what main.m passes in
+%                   -- GDP_REAL_Q/GDP_DEFLATOR_Q are unaffected either way
+%                   since neither is SA in this pipeline, and the fiscal
+%                   balance (both forecast and historical) is computed on
+%                   SA levels to match.
+%   namesQ       : quarterly mnemonics matching dataQ's rows and draws'
+%                   columns. Must NOT include GDP_NOMINAL_Q (dropped from
+%                   the estimated dataset in main.m); ngdp_raw_eur supplies
+%                   nominal GDP separately, below.
+%   dates        : 1 x T, year + (month-1)/12, matching dataQ's time axis
+%                   (e.g. load_raw_data()'s dates_full, per main.m).
+%   ngdp_raw_eur : 1 x T, raw (source-SA) nominal GDP level (GDP_NOMINAL_Q),
+%                   EUR, NOT EUR millions (a mismatch here silently produces
+%                   a balance-to-GDP ratio too large by a factor of 1e6),
+%                   matching dataQ's time axis. The anchor used for i) is
+%                   this row's latest non-NaN value; the full row is also
+%                   used for the historical balance-to-GDP ratio in ii).
 %
 % Returns postproc, a struct with:
 %   .ngdp             : output of f_nominal_gdp.m (dates, levels_real,
@@ -56,7 +60,10 @@ function postproc = f_postprocess_draws(draws, dataQ, namesQ, dates, anchor_ngdp
 %                        = levels_rev - levels_exp, positive = surplus).
 %   .balance_to_gdp   : .dates (quarters common to .balance and .ngdp) and
 %                        .ratio_pct (Hq_common x Ndraws, balance / nominal
-%                        GDP (EUR) x 100).
+%                        GDP (EUR) x 100) -- forecast only, one column per
+%                        draw; plus .hist_dates_dt/.hist_ratio_pct (1 x T
+%                        each, NaN outside actual quarters), the same ratio
+%                        computed from history, no draws involved.
 
 REV_VAR = 'REV_GG_TOTAL_Q';
 EXP_VAR = 'EXP_GG_TOTAL_Q';
@@ -64,6 +71,9 @@ EXP_VAR = 'EXP_GG_TOTAL_Q';
 yr_all = floor(dates);
 mo_all = round((dates - yr_all) * 12) + 1;
 dates_dt = datetime(yr_all, mo_all, 1);
+
+idx_ngdp_obs = find(~isnan(ngdp_raw_eur));
+anchor_ngdp_eur = ngdp_raw_eur(idx_ngdp_obs(end));
 
 % --- i) nominal GDP, rescaled from index to EUR ---------------------------
 
@@ -99,6 +109,16 @@ end
 
 balance_to_gdp.dates = common_dates;
 balance_to_gdp.ratio_pct = 100 * balance.levels_balance(i_bal, :) ./ ngdp.levels_nom_eur(i_gdp, :);
+
+% --- balance as a percent of nominal GDP, actual history -------------------
+% Same definition as the forecast above (SA revenue/expenditure levels over
+% raw nominal GDP), computed directly on actuals -- no draws, no cumulation.
+
+i_rev = find(strcmp(namesQ, REV_VAR));
+i_exp = find(strcmp(namesQ, EXP_VAR));
+
+balance_to_gdp.hist_dates_dt = dates_dt;
+balance_to_gdp.hist_ratio_pct = 100 * (dataQ(i_rev, :) - dataQ(i_exp, :)) ./ ngdp_raw_eur;
 
 postproc.ngdp = ngdp;
 postproc.balance = balance;

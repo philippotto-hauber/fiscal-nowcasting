@@ -1,19 +1,24 @@
-"""Build a clean monthly dataset from the small trial spreadsheet.
+"""Build a clean monthly dataset from the small trial spreadsheets.
 
-Reads data/Fiscal_Macro_Dataset_trial_small.xlsx and writes:
+Reads data/Fiscal_Macro_Dataset_trial_small.xlsx (monthly series) and
+data/Fiscal_Macro_Dataset_trial_small_quarterly.xlsx (quarterly series -- the
+source now ships these in a separate file instead of repeating each
+quarterly value across all 3 months of a combined monthly sheet) and writes:
   - data/trial_small_monthly.csv             (date + one column per mnemonic)
   - data/trial_small_monthly_dictionary.json (mnemonic -> source description /
     decumulate)
 
-Variables are looked up by their source description string (the sheet has no
-duplicate descriptions, unlike the full trial spreadsheet, so each series is
-uniquely identifiable by name alone). Two transforms are applied where
-needed:
-  - "Q": series is quarterly but repeated across all 3 months of the quarter
-         in the source file -> keep only the quarter-end (Mar/Jun/Sep/Dec)
-         observation, set the other two months to NaN. Not recorded as its
-         own dictionary field since it's already implied by the mnemonic's
-         _Q suffix.
+Variables are looked up by their source description string within whichever
+file their transform says they live in (neither sheet has duplicate
+descriptions, so each series is uniquely identifiable by name alone). Two
+transforms are applied where needed:
+  - "Q": series is quarterly, one row per quarter, dated at the first month
+         of the quarter (Jan/Apr/Jul/Oct) in the source file -> relabel onto
+         the quarter-end month (Mar/Jun/Sep/Dec) convention used for
+         quarterly series elsewhere in this dataset; the other two months of
+         the quarter are simply absent (become NaN once merged onto the
+         monthly grid). Not recorded as its own dictionary field since it's
+         already implied by the mnemonic's _Q suffix.
   - "C": series is a monthly year-to-date cumulative flow -> decumulate to a
          genuine monthly flow (first differences within each calendar year).
          Recorded as dictionary field "decumulate": true/false.
@@ -32,7 +37,8 @@ import numpy as np
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RAW_PATH = REPO_ROOT / "data" / "Fiscal_Macro_Dataset_trial_small.xlsx"
+RAW_PATH_MONTHLY = REPO_ROOT / "data" / "Fiscal_Macro_Dataset_trial_small.xlsx"
+RAW_PATH_QUARTERLY = REPO_ROOT / "data" / "Fiscal_Macro_Dataset_trial_small_quarterly.xlsx"
 OUT_DATA_PATH = REPO_ROOT / "data" / "trial_small_monthly.csv"
 OUT_DICT_PATH = REPO_ROOT / "data" / "trial_small_monthly_dictionary.json"
 
@@ -40,7 +46,7 @@ HEADER_ROW = 3  # 0-based row index (in the raw sheet) holding variable descript
 DATA_START_ROW = 4  # 0-based row index where the first observation appears
 
 # (source description, mnemonic, transform, publication_delay)
-# transform is one of "M" (use as-is), "Q" (dequarter), "C" (decumulate).
+# transform is one of "M" (use as-is), "Q" (requarter), "C" (decumulate).
 # publication_delay is in days after the end of the reference period:
 #   REV/EXP _M    : given (20d, monthly fiscal cash-budget releases)
 #   REV/EXP _Q    : looked up -- Destatis's "detailed" quarterly sector
@@ -96,10 +102,16 @@ VARIABLES = [
     ('Bundesbank, Federal Employment Agency - Revenue - Contributions, EUR', 'REV_BA_CONTRIB_M', 'M', 20),
 ]
 
-def dequarter(series: pd.Series) -> pd.Series:
-    """Keep only the quarter-end (Mar/Jun/Sep/Dec) observation each quarter."""
+def requarter(series: pd.Series) -> pd.Series:
+    """Relabel a quarter-start-dated series onto the quarter-end month.
+
+    The quarterly source file dates each observation at the first month of
+    the quarter (Jan/Apr/Jul/Oct); shift to the quarter-end month
+    (Mar/Jun/Sep/Dec) to match the convention used for quarterly series
+    elsewhere in this dataset.
+    """
     out = series.copy()
-    out[~out.index.month.isin([3, 6, 9, 12])] = float("nan")
+    out.index = out.index + pd.DateOffset(months=2)
     return out
 
 
@@ -124,8 +136,8 @@ def decumulate(series: pd.Series) -> pd.Series:
     return pd.Series(flow, index=series.index)
 
 
-def load_raw():
-    raw = pd.read_excel(RAW_PATH, sheet_name=0, header=None)
+def load_raw(path):
+    raw = pd.read_excel(path, sheet_name=0, header=None)
     names = raw.iloc[HEADER_ROW, 1:].tolist()
     dates = pd.to_datetime(raw.iloc[DATA_START_ROW:, 0]).reset_index(drop=True)
     data = raw.iloc[DATA_START_ROW:, 1:].reset_index(drop=True)
@@ -136,17 +148,18 @@ def load_raw():
 
 
 def build_dataset():
-    data, names = load_raw()
+    data_m, names_m = load_raw(RAW_PATH_MONTHLY)
+    data_q, names_q = load_raw(RAW_PATH_QUARTERLY)
 
     out_columns = {}
     dictionary = {}
     for source_name, mnemonic, transform, publication_delay in VARIABLES:
-        col_idx = names.index(source_name)
-        series = data[col_idx]
         if transform == "Q":
-            series = dequarter(series)
-        elif transform == "C":
-            series = decumulate(series)
+            series = requarter(data_q[names_q.index(source_name)])
+        else:
+            series = data_m[names_m.index(source_name)]
+            if transform == "C":
+                series = decumulate(series)
         out_columns[mnemonic] = series
         dictionary[mnemonic] = {
             "source_description": source_name,

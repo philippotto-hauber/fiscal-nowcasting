@@ -7,9 +7,8 @@ function [hhist, hmed, h50, h95] = f_plot_fan(hist_dates_dt, hist_vals, forecast
 %   hist_dates_dt, hist_vals : historical datetime vector and values. Pass
 %                              [] for both to plot a forecast-only fan, with
 %                              no history line and no bridge point (used for
-%                              derived quantities with no historical series
-%                              of their own, e.g. the deficit-to-GDP ratio
-%                              in f_postprocess_draws.m).
+%                              a derived quantity with no historical values
+%                              at hand).
 %   forecast_dates           : 1 x Hq forecast quarter-end datetimes.
 %   forecast_pctiles         : Hq x 5, columns = [2.5 25 50 75 97.5]
 %                              percentiles.

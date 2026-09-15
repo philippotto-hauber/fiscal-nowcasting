@@ -5,6 +5,88 @@ Newest entries at the top. Update this file when a session wraps up a
 meaningful chunk of work (new commits, a design decision, or an in-progress
 state worth flagging for next time).
 
+## In progress (uncommitted, as of 2026-09-15, continued)
+
+Follow-up in the same session, after the file-split work below: two related
+`main.m`/plotting changes, requested together.
+- **Dropped `GDP_NOMINAL_Q` from the estimated dataset.** It was one of the
+  5 quarterly variables fed into `GibbsSampler.m`, but contributed nothing
+  beyond the nominal-GDP anchor -- `GDP_REAL_Q`/`GDP_DEFLATOR_Q` already
+  carry the real-GDP/price-level information, and `f_nominal_gdp.m`
+  reconstructs an implied nominal GDP index from those two. `main.m` now
+  loads it, extracts the full raw history (`ngdp_raw_eur`), then drops its
+  row from `dataQ_raw`/`dataQ_sa`/`namesQ` before `f_growth_rates.m` --
+  `options.Nq` (and everything downstream that sizes off it, e.g.
+  `GibbsSampler.m`'s state-space dimensions) automatically becomes 4.
+  Checked `GibbsSampler.m` for anything hardcoded to `Nq == 5`: the only
+  literal 5s in there are the temporal-aggregation weight vector
+  `[1/3 2/3 3/3 2/3 1/3]` (5 lags per quarterly variable, unrelated to how
+  many quarterly variables there are) -- safe.
+- **Nominal GDP anchor is no longer hardcoded** (the 2026-09-08 entry's
+  `1171696e6` is long gone) **and is no longer a main.m-level scalar** --
+  `f_postprocess_draws.m` now takes the full `ngdp_raw_eur` row (not a
+  pre-extracted scalar) and derives the anchor internally as its last
+  non-NaN value, so it doubles as the source for the new historical ratio
+  below.
+- **Added a historical general-government balance-to-GDP series.** Now
+  that `GDP_NOMINAL_Q` history is loaded (previously only a single anchor
+  value was extracted), `f_postprocess_draws.m` also computes
+  `balance_to_gdp.hist_dates_dt`/`.hist_ratio_pct` = 100 x (SA
+  `REV_GG_TOTAL_Q` - SA `EXP_GG_TOTAL_Q`) / raw `GDP_NOMINAL_Q`, actuals
+  only, no MCMC draws -- same definition as the forecast ratio.
+  `plot_gdp_deficit.m`'s deficit tile now plots history + forecast (via
+  `f_plot_fan.m`, same as the GDP growth tile already did) instead of
+  forecast-only.
+- Ran `main.m` end-to-end via MATLAB R2023a batch mode (10,000 MCMC
+  iterations, ~2.5 min -- noticeably faster than the 2026-09-08 session's
+  ~7 min, likely just machine-load variance) to confirm it works; no
+  errors. Visually checked `output/gdp_deficit.png`: historical balance
+  runs roughly 0% to -5% of GDP, a plausible range for the German general
+  government, and the forecast fan bridges cleanly from the last
+  historical point.
+
+## In progress (uncommitted, as of 2026-09-15)
+
+Source data for the small trial dataset now ships as two separate files
+instead of one: `data/Fiscal_Macro_Dataset_trial_small.xlsx` (monthly
+series only) and the new `data/Fiscal_Macro_Dataset_trial_small_quarterly.xlsx`
+(quarterly series, one row per quarter, dated at the quarter's first month
+-- Jan/Apr/Jul/Oct). Updated `src/build_small_dataset.py` to read the 5
+quarterly mnemonics (`EXP_GG_TOTAL_Q`, `REV_GG_TOTAL_Q`, `GDP_DEFLATOR_Q`,
+`GDP_REAL_Q`, `GDP_NOMINAL_Q`) from the new file and everything else from
+the monthly file, as before. Replaced the old `dequarter()` (which zeroed
+out 2-of-3 months of a monthly-repeated quarterly source) with
+`requarter()`, which just shifts the new file's quarter-start dates onto
+the quarter-end month convention (`+2 months`) used everywhere else in this
+dataset; the other two months are simply absent from the sparse source and
+become NaN once merged onto the monthly grid, same net effect as before.
+- **Real discrepancy found, not just a format change**: for the 3
+  EUR-denominated quarterly series (`EXP_GG_TOTAL_Q`, `REV_GG_TOTAL_Q`,
+  `GDP_NOMINAL_Q`), the old combined monthly file held the quarterly total
+  *divided by 3* and repeated across the quarter's 3 months -- an implied
+  monthly-rate convention that only applied to EUR-level series, not the
+  index-type ones (`GDP_REAL_Q`, `GDP_DEFLATOR_Q`, unaffected either way).
+  The new quarterly file gives the true, undivided quarterly total -- values
+  for these 3 mnemonics are now exactly 3x what they were in the previously
+  committed `trial_small_monthly.csv`/`fiscal_sa_levels.csv`. User confirmed:
+  keep the new file's true totals (no `/3`), since the old convention looked
+  like a bug.
+- **Checked whether this 3x break's `main.m`'s fiscal-balance-to-GDP calc --
+  it doesn't**: `options.anchor_ngdp_eur` (main.m:28-29) is derived at
+  runtime from the latest raw `GDP_NOMINAL_Q` level, not hardcoded, so it
+  scales by the same 3x as `EXP_GG_TOTAL_Q`/`REV_GG_TOTAL_Q` in
+  `f_postprocess_draws.m`'s `balance_to_gdp.ratio_pct` -- numerator and
+  denominator both triple, ratio is unchanged. No MATLAB changes needed.
+- Reran the full two-step pipeline (`build_small_dataset.py` then
+  `build_fiscal_sa_levels.py`) so the dictionary's `seasonally_adjust`/
+  `transform` fields (added by the second step) stay populated -- the first
+  step alone overwrites the dictionary file and would silently drop them.
+  Both ran clean (same routine X-13 spectrum-peak warning as always).
+- New quarterly file also carries one series with no mnemonic yet:
+  "Gross Domestic Product, Total, Current Prices, EUR" (unadjusted/NSA
+  nominal GDP, distinct from the existing SA `GDP_NOMINAL_Q`). Not added --
+  out of scope for this file-split adaptation; flag if it becomes useful.
+
 ## In progress (uncommitted, as of 2026-09-10)
 
 User replaced `data/Fiscal_Macro_Dataset_trial_small.xlsx` with a version
