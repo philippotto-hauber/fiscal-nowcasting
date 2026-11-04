@@ -67,3 +67,6 @@ plot_gdp_deficit(draws, postproc, dataQ_restand, dates, namesQ, './output', 2022
 plot_rev_exp(postproc, dataQ_sa, namesQ, ngdp_raw_eur, dates_full, './output', 2022);
 write_forecast_summary(draws, postproc, dataQ_restand, dates, namesQ, './output');
 plot_annual_balance(postproc, dataQ_sa, namesQ, ngdp_raw_eur, dates_full, './output');
+
+% Shareable interactive version (charts + table, self-contained HTML)
+export_forecast_html(draws, postproc, dataQ_restand, dates, namesQ, dataQ_sa, ngdp_raw_eur, dates_full, vintagedate, './output', 2022);

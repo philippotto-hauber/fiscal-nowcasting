@@ -5,7 +5,27 @@ Newest entries at the top. Update this file when a session wraps up a
 meaningful chunk of work (new commits, a design decision, or an in-progress
 state worth flagging for next time).
 
-## In progress (uncommitted, as of 2026-11-02)
+## In progress (uncommitted, as of 2026-11-04)
+
+Interactive, shareable output: `src/export_forecast_html.m` (called at the
+end of `main.m`) writes `output/forecast_dashboard.html` -- one
+self-contained file (~1.1 MB, works offline, no MATLAB needed) with 4
+Plotly fan charts (GDP q/q, GG balance / revenues / expenditures % of GDP;
+hover = median + 50%/95% intervals), the forecast summary table (built in JS
+from the same embedded JSON) and a "Download all numbers (CSV)" button
+(history + all percentiles, long format). Light/dark mode, phone width
+checked via headless Edge screenshots.
+- Page layout/JS lives in `src/forecast_dashboard_template.html`; MATLAB
+  fills two placeholders (Plotly bundle, JSON data).
+- Plotly.js basic bundle v2.35.2 is pinned at
+  `tools/plotly-basic-2.35.2.min.js`. `tools/` is git-ignored by convention
+  (downloaded, not tracked), so the export `websave`s it from jsDelivr on
+  first use if missing.
+- Numbers identical to forecast_summary.md / PNGs (generated from a saved
+  workspace of an identical-seed run; MATLAB PNGs differ only by embedded
+  timestamp between runs).
+
+## Committed in 651cb8c (as of 2026-11-02)
 
 New data delivery (both trial xlsx files replaced; identical column
 structure, values refreshed/extended: monthly to Oct 2026, quarterly to

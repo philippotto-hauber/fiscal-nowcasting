@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>German Fiscal Nowcast</title>
+<!--
+  Template for src/export_forecast_html.m. The two placeholder comments in the
+  <script> tags below are replaced by MATLAB: the first with the Plotly.js
+  bundle from tools/, the second with the forecast data as JSON. The result is
+  a single self-contained HTML file (no internet access needed to view it).
+-->
+<style>
+  :root {
+    color-scheme: light;
+    --surface:   #fcfcfb;
+    --surface-2: #f3f2ee;
+    --ink:       #0b0b0b;
+    --ink-2:     #52514e;
+    --muted:     #898781;
+    --grid:      #e1e0d9;
+    --border:    #d6d5ce;
+    --series:    #2a78d6;
+    --band-50:   rgba(42, 120, 214, 0.38);
+    --band-95:   rgba(42, 120, 214, 0.16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface:   #1a1a19;
+      --surface-2: #232322;
+      --ink:       #f0efec;
+      --ink-2:     #c3c2b7;
+      --muted:     #898781;
+      --grid:      #2c2c2a;
+      --border:    #3a3a37;
+      --series:    #3987e5;
+      --band-50:   rgba(57, 135, 229, 0.42);
+      --band-95:   rgba(57, 135, 229, 0.18);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface:   #1a1a19;
+    --surface-2: #232322;
+    --ink:       #f0efec;
+    --ink-2:     #c3c2b7;
+    --muted:     #898781;
+    --grid:      #2c2c2a;
+    --border:    #3a3a37;
+    --series:    #3987e5;
+    --band-50:   rgba(57, 135, 229, 0.42);
+    --band-95:   rgba(57, 135, 229, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 32px 16px 48px; }
+  header h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; }
+  .sub { color: var(--ink-2); margin: 0; }
+  .meta { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+
+  .key {
+    display: flex; flex-wrap: wrap; gap: 6px 20px;
+    margin: 24px 0 8px; color: var(--ink-2); font-size: 13px;
+  }
+  .key span { display: inline-flex; align-items: center; gap: 8px; }
+  .sw-line { width: 18px; height: 0; border-top: 2px solid; }
+  .sw-box  { width: 18px; height: 10px; border-radius: 2px; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  @media (min-width: 820px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .card {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 12px 4px; min-width: 0;
+  }
+  .card h2 { font-size: 15px; margin: 0 4px; }
+  .card .unit { color: var(--muted); font-size: 13px; margin: 0 4px; }
+  .chart { width: 100%; height: 300px; }
+
+  section.table-sec { margin-top: 36px; }
+  .table-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .table-head h2 { font-size: 18px; margin: 0; }
+  button {
+    font: inherit; font-size: 13px; color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  }
+  button:hover { border-color: var(--muted); }
+  .table-wrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; }
+  /* Data columns centered so every value in a column shares one center line,
+     whether it carries an interval or an "actual" label below it. */
+  th:not(:first-child), td:not(:first-child) { text-align: center; }
+  thead th { color: var(--ink-2); font-weight: 600; background: var(--surface-2); vertical-align: bottom; white-space: normal; }
+  tbody tr:last-child td { border-bottom: none; }
+  .stack { display: inline-block; text-align: center; }
+  .med { display: block; font-weight: 600; }
+  .val { display: block; }
+  .rng, .act { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+  td { vertical-align: top; }
+
+  footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
+  footer p { margin: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>German fiscal nowcast</h1>
+    <p class="sub">Real GDP growth and the general government budget: history and forecast distribution</p>
+    <p class="meta" id="meta"></p>
+  </header>
+
+  <div class="key" aria-hidden="true">
+    <span><i class="sw-line" style="border-color: var(--ink)"></i>Actual</span>
+    <span><i class="sw-line" style="border-color: var(--series)"></i>Median forecast</span>
+    <span><i class="sw-box" style="background: var(--band-50)"></i>50% interval</span>
+    <span><i class="sw-box" style="background: var(--band-95)"></i>95% interval</span>
+  </div>
+
+  <div class="grid" id="charts"></div>
+
+  <section class="table-sec">
+    <div class="table-head">
+      <h2>Forecast summary</h2>
+      <button type="button" id="csv">Download all numbers (CSV)</button>
+    </div>
+    <div class="table-wrap">
+      <table id="summary"><thead></thead><tbody></tbody></table>
+    </div>
+    <p class="meta">Median forecast, with the 25th&ndash;75th percentile range in brackets. &ldquo;actual&rdquo; marks quarters that are already published.</p>
+  </section>
+
+  <footer>
+    <p>Mixed-frequency dynamic factor model, Bayesian estimation; intervals are percentiles of the MCMC predictive draws.</p>
+    <p>Revenues, expenditures and balance: general government, seasonally adjusted, as a percent of nominal GDP.</p>
+  </footer>
+</main>
+
+<script>/*__PLOTLY_JS__*/</script>
+<script>
+const DATA = /*__FORECAST_DATA__*/;
+
+(function () {
+  const arr = v => (v === null || v === undefined) ? [] : (Array.isArray(v) ? v : [v]);
+  const fmt = v => (v === null || v === undefined || Number.isNaN(v)) ? '' : v.toFixed(1).replace('-', '−');
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  // --- header ---------------------------------------------------------------
+  document.getElementById('meta').textContent =
+    'Data vintage: ' + DATA.meta.vintage + ' · Generated: ' + DATA.meta.generated;
+
+  // --- charts ---------------------------------------------------------------
+  const chartsEl = document.getElementById('charts');
+  const chartDivs = [];
+
+  DATA.series.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const h = document.createElement('h2'); h.textContent = s.title;
+    const u = document.createElement('p'); u.className = 'unit'; u.textContent = s.unit;
+    const div = document.createElement('div'); div.className = 'chart';
+    card.append(h, u, div);
+    chartsEl.appendChild(card);
+    chartDivs.push({ div, s });
+  });
+
+  function traces(s) {
+    const hx = arr(s.hist.q), hy = arr(s.hist.v);
+    const fx = arr(s.fc.q);
+    const p = k => arr(s.fc[k]);
+    // Bands start at the last actual point so the fan bridges from history.
+    const lastX = hx[hx.length - 1], lastY = hy[hy.length - 1];
+    const bx = [lastX].concat(fx);
+    const b = k => [lastY].concat(p(k));
+    const series = css('--series'), ink = css('--ink');
+    const band = (y, fill, color) => ({
+      x: bx, y, type: 'scatter', mode: 'lines', line: { width: 0 },
+      fill, fillcolor: color, hoverinfo: 'skip', showlegend: false
+    });
+    const custom = fx.map((_, i) => [p('p25')[i], p('p75')[i], p('p025')[i], p('p975')[i]]);
+    return [
+      band(b('p025'), 'none', 'rgba(0,0,0,0)'),
+      band(b('p975'), 'tonexty', css('--band-95')),
+      band(b('p25'),  'none', 'rgba(0,0,0,0)'),
+      band(b('p75'),  'tonexty', css('--band-50')),
+      { x: [lastX, fx[0]], y: [lastY, p('p50')[0]], type: 'scatter', mode: 'lines',
+        line: { color: series, width: 2 }, hoverinfo: 'skip', showlegend: false },
+      { x: hx, y: hy, type: 'scatter', mode: 'lines+markers', name: 'Actual',
+        line: { color: ink, width: 2 }, marker: { size: 5, color: ink },
+        hovertemplate: 'Actual <b>%{y:.1f}</b><extra></extra>' },
+      { x: fx, y: p('p50'), customdata: custom, type: 'scatter', mode: 'lines+markers', name: 'Median',
+        line: { color: series, width: 2 }, marker: { size: 6, color: series },
+        hovertemplate: 'Median <b>%{y:.1f}</b><br>50%: %{customdata[0]:.1f} to %{customdata[1]:.1f}' +
+                       '<br>95%: %{customdata[2]:.1f} to %{customdata[3]:.1f}<extra></extra>' }
+    ];
+  }
+
+  function layout(s) {
+    const cats = arr(s.hist.q).concat(arr(s.fc.q));
+    const lastHist = arr(s.hist.q).slice(-1)[0];
+    const ink2 = css('--ink-2'), muted = css('--muted'), grid = css('--grid'), surface = css('--surface');
+    return {
+      margin: { l: 44, r: 12, t: 8, b: 56 },
+      paper_bgcolor: surface, plot_bgcolor: surface,
+      font: { family: getComputedStyle(document.body).fontFamily, size: 12, color: ink2 },
+      showlegend: false,
+      hovermode: 'x unified',
+      hoverlabel: { bgcolor: surface, bordercolor: grid, font: { color: css('--ink') } },
+      xaxis: {
+        type: 'category', categoryorder: 'array', categoryarray: cats,
+        tickangle: -45, tickfont: { color: muted }, showgrid: false,
+        linecolor: muted, showspikes: true, spikemode: 'across', spikethickness: 1,
+        spikecolor: muted, spikedash: 'solid', fixedrange: true,
+        nticks: 12
+      },
+      yaxis: { gridcolor: grid, zeroline: true, zerolinecolor: muted, zerolinewidth: 1,
+               tickfont: { color: muted }, fixedrange: true },
+      shapes: [{ type: 'line', xref: 'x', yref: 'paper', x0: lastHist, x1: lastHist, y0: 0, y1: 1,
+                 line: { color: muted, width: 1, dash: 'dash' } }]
+    };
+  }
+
+  const config = { displaylogo: false, responsive: true,
+                   modeBarButtonsToRemove: ['zoom2d','pan2d','select2d','lasso2d','zoomIn2d','zoomOut2d','autoScale2d','resetScale2d'] };
+
+  function drawAll() {
+    chartDivs.forEach(({ div, s }) => Plotly.react(div, traces(s), layout(s), config));
+  }
+  drawAll();
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawAll);
+  }
+
+  // --- summary table ----------------------------------------------------------
+  // Rows: union of all forecast quarters. A series with no forecast for a
+  // quarter shows its actual value there (marked) if published, else a dash.
+  const allQ = Array.from(new Set(DATA.series.flatMap(s => arr(s.fc.q)))).sort();
+  const thead = document.querySelector('#summary thead');
+  const tbody = document.querySelector('#summary tbody');
+
+  const hr = document.createElement('tr');
+  const th0 = document.createElement('th'); th0.textContent = 'Quarter'; hr.appendChild(th0);
+  DATA.series.forEach(s => {
+    const th = document.createElement('th');
+    th.textContent = s.short + ' (' + s.unit + ')';
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+
+  allQ.forEach(q => {
+    const tr = document.createElement('tr');
+    const td0 = document.createElement('td'); td0.textContent = q; tr.appendChild(td0);
+    DATA.series.forEach(s => {
+      const td = document.createElement('td');
+      // Number and its interval/label form one block, centered on each other;
+      // the block itself stays right-aligned in the column.
+      const stack = document.createElement('span'); stack.className = 'stack';
+      const i = arr(s.fc.q).indexOf(q);
+      if (i >= 0) {
+        const m = document.createElement('span'); m.className = 'med'; m.textContent = fmt(arr(s.fc.p50)[i]);
+        const r = document.createElement('span'); r.className = 'rng';
+        r.textContent = '[' + fmt(arr(s.fc.p25)[i]) + ', ' + fmt(arr(s.fc.p75)[i]) + ']';
+        stack.append(m, r);
+        td.appendChild(stack);
+      } else {
+        const j = arr(s.hist.q).indexOf(q);
+        if (j >= 0) {
+          const m = document.createElement('span'); m.className = 'val'; m.textContent = fmt(arr(s.hist.v)[j]);
+          const a = document.createElement('span'); a.className = 'act'; a.textContent = 'actual';
+          stack.append(m, a);
+          td.appendChild(stack);
+        } else {
+          td.textContent = '–';
+        }
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  // --- CSV download (history + all forecast percentiles, long format) --------
+  document.getElementById('csv').addEventListener('click', () => {
+    const rows = [['series', 'unit', 'quarter', 'type', 'value', 'p2.5', 'p25', 'p50', 'p75', 'p97.5']];
+    const n = v => (v === null || v === undefined) ? '' : String(v);
+    DATA.series.forEach(s => {
+      arr(s.hist.q).forEach((q, j) => rows.push([s.id, s.unit, q, 'actual', n(arr(s.hist.v)[j]), '', '', '', '', '']));
+      arr(s.fc.q).forEach((q, i) => rows.push([s.id, s.unit, q, 'forecast', '',
+        n(arr(s.fc.p025)[i]), n(arr(s.fc.p25)[i]), n(arr(s.fc.p50)[i]), n(arr(s.fc.p75)[i]), n(arr(s.fc.p975)[i])]));
+    });
+    const csv = rows.map(r => r.map(c => /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'fiscal_nowcast_' + DATA.meta.vintage_id + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+})();
+</script>
+</body>
+</html>
