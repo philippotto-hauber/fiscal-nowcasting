@@ -38,13 +38,37 @@ dates_dt = datetime(yr_all, mo_all, 1);
 [dates_real, levels_real] = f_cumulate_level(draws, dataQ, namesQ, dates_dt, REAL_VAR);
 [dates_defl, levels_defl] = f_cumulate_level(draws, dataQ, namesQ, dates_dt, DEFL_VAR);
 
-if numel(dates_real) ~= numel(dates_defl) || any(dates_real ~= dates_defl)
-    error('f_nominal_gdp: %s and %s do not share the same forecast horizon.', REAL_VAR, DEFL_VAR);
-end
+% Ragged edge: the two series can end on different quarters (e.g. real GDP
+% flash already out for a quarter whose deflator isn't yet), so their
+% forecast windows start at different quarters (both end at the same
+% horizon). Use the union of the two windows and fill each series' quarters
+% before its own forecast start with its actual level (identical across
+% draws), so nominal GDP covers every quarter either input forecasts.
+dates_all = union(dates_real, dates_defl);
+levels_real = f_pad_with_actuals(levels_real, dates_real, dates_all, dataQ, namesQ, dates_dt, REAL_VAR);
+levels_defl = f_pad_with_actuals(levels_defl, dates_defl, dates_all, dataQ, namesQ, dates_dt, DEFL_VAR);
 
-forecasts_ngdp.dates = dates_real;
+forecasts_ngdp.dates = dates_all;
 forecasts_ngdp.levels_real = levels_real;
 forecasts_ngdp.levels_defl = levels_defl;
 forecasts_ngdp.levels_nom = levels_real .* levels_defl / 100;
 
+end
+
+
+function levels_out = f_pad_with_actuals(levels, fc_dates, dates_all, dataQ, namesQ, dates_dt, mnemonic)
+% Maps one series' forecast levels (numel(fc_dates) x Ndraws) onto the
+% dates_all grid; quarters in dates_all but not in fc_dates must be actual
+% observations of the series and are filled with that actual value.
+i = find(strcmp(namesQ, mnemonic));
+levels_out = NaN(numel(dates_all), size(levels, 2));
+[is_fc, loc] = ismember(dates_all, fc_dates);
+levels_out(is_fc, :) = levels(loc(is_fc), :);
+for h = find(~is_fc(:))'
+    idx = find(dates_dt == dates_all(h));
+    if isempty(idx) || isnan(dataQ(i, idx))
+        error('f_nominal_gdp: %s has neither a forecast nor an actual for %s.', mnemonic, datestr(dates_all(h)));
+    end
+    levels_out(h, :) = dataQ(i, idx);
+end
 end

@@ -5,6 +5,40 @@ Newest entries at the top. Update this file when a session wraps up a
 meaningful chunk of work (new commits, a design decision, or an in-progress
 state worth flagging for next time).
 
+## In progress (uncommitted, as of 2026-11-02)
+
+New data delivery (both trial xlsx files replaced; identical column
+structure, values refreshed/extended: monthly to Oct 2026, quarterly to
+2026Q3). Reran `build_small_dataset.py` + `build_fiscal_sa_levels.py`
+(clean; X-13 now also warns about a trading-day spectrum peak, not just the
+usual seasonal one) and `main.m` (10,000 MCMC iterations, ~10 min).
+- **Ragged edge broke postprocessing**: `GDP_REAL_Q`/`GDP_NOMINAL_Q` now
+  run to 2026Q3, but `GDP_DEFLATOR_Q` and the GG fiscal series stop at
+  2026Q2. Fixes:
+  - `f_nominal_gdp.m`: real-GDP and deflator forecast windows no longer have
+    to coincide; uses their union and pads with actuals (`f_pad_with_actuals`)
+    -- previously would have errored.
+  - `f_postprocess_draws.m`: EUR anchor now taken at the latest quarter
+    where nominal GDP, real GDP AND deflator are all observed (2026Q2 here),
+    instead of each series' own last value (which would have mixed Q3
+    nominal with a Q2 deflator).
+  - `write_forecast_summary.m`: table rows are the union of GDP and balance
+    forecast quarters; GDP shows "x.x (actual)" where already published
+    (2026Q3), so the Q3 balance forecast is no longer dropped.
+- **New plot `src/plot_rev_exp.m`** -> `output/fcasts_rev_exp.png`, called
+  from `main.m` after `plot_gdp_deficit`: GG revenues and expenditures as %
+  of nominal GDP, history (SA level / raw GDP_NOMINAL_Q) + forecast fan
+  (per-draw level / `postproc.ngdp.levels_nom_eur`), same definition as the
+  balance ratio, so rev - exp = balance tile. User first got EUR bn levels,
+  then asked for % of GDP instead.
+- `f_postprocess_draws.m` now also returns `balance_to_gdp.rev_pct`/
+  `.exp_pct` (per-draw components of `ratio_pct`); `write_forecast_summary.m`
+  adds GG revenues / expenditures (% of GDP) columns from them. Forecast
+  quarters only -- history not exported (offered as a follow-up).
+- Possible refinement, not done: with nominal + real GDP both observed for
+  2026Q3, the Q3 deflator is implicitly known too; currently the model's
+  deflator forecast is used for that quarter instead.
+
 ## In progress (uncommitted, as of 2026-09-15, continued)
 
 Follow-up in the same session, after the file-split work below: two related

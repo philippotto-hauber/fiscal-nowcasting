@@ -20,8 +20,8 @@ function plot_gdp_deficit(draws, postproc, dataQ_restand, dates, namesQ, outpath
 %                       dataQ_restand's time axis.
 %   namesQ           : quarterly mnemonics matching dataQ_restand's rows
 %                       and draws' columns.
-%   outpath          : directory to save 'gdp_deficit.png' into, or ''/
-%                       omitted to skip saving.
+%   outpath          : directory to save 'fcasts_gdp_deficit.png' into, or
+%                       ''/omitted to skip saving.
 %   hist_start_year  : earliest year (as year + (month-1)/12) of GDP growth
 %                       history to plot, or omitted/[] for all history.
 
@@ -88,6 +88,6 @@ lgd = legend(leg_handles, ...
 lgd.Layout.Tile = 'south';
 
 if ~isempty(outpath)
-    exportgraphics(gcf, fullfile(outpath, 'gdp_deficit.png'));
+    exportgraphics(gcf, fullfile(outpath, 'fcasts_gdp_deficit.png'));
 end
 end

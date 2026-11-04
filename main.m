@@ -42,14 +42,12 @@ options.Nm = size(dataM_stand, 1);
 options.Nq = size(dataQ_stand, 1);
 options.Nn = options.Nm + options.Nq ; 
 options.Nt = size(dataM_stand, 2);
-vintagemonth = month(vintagedate) ; 
-if ismember(vintagemonth,[3 6 9 12])
-    options.Nh = 3 + 6; 
-elseif ismember(vintagemonth,[1 4 7 10])
-    options.Nh = 2 + 6; 
-elseif ismember(vintagemonth,[2 5 8 11])
-    options.Nh = 1 + 6;
-end
+% Forecast horizon: always run through December of the year after the
+% vintage's year, however many months out that is (e.g. a September 2026
+% vintage forecasts through Dec 2027 -- Nh = 15 months beyond the last
+% month in the monthly grid, which is vintagedate itself).
+horizon_end = datetime(year(vintagedate) + 1, 12, 1);
+options.Nh  = (year(horizon_end) - year(vintagedate)) * 12 + (month(horizon_end) - month(vintagedate));
 
 % MCMC
 priors = loadpriors(options, options.priorswitch); 
@@ -66,5 +64,6 @@ forecasts_nsa = f_reseasonalize(draws, dataQ_raw, dataQ_sa, namesQ, dates_full);
 dataQ_restand = dataQ_stand .* stdsQ' + meansQ';
 
 plot_gdp_deficit(draws, postproc, dataQ_restand, dates, namesQ, './output', 2022);
+plot_rev_exp(postproc, dataQ_sa, namesQ, ngdp_raw_eur, dates_full, './output', 2022);
 write_forecast_summary(draws, postproc, dataQ_restand, dates, namesQ, './output');
 plot_annual_balance(postproc, dataQ_sa, namesQ, ngdp_raw_eur, dates_full, './output');

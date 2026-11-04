@@ -54,22 +54,47 @@ gdp_pctiles = reshape(pctiles(j_start:Hq_max, i, :), Hq_i, 3);  % [p25 p50 p75]
 
 bal_dates   = postproc.balance_to_gdp.dates;
 bal_pctiles = prctile(postproc.balance_to_gdp.ratio_pct, [25 50 75], 2);  % [p25 p50 p75]
+rev_pctiles = prctile(postproc.balance_to_gdp.rev_pct,   [25 50 75], 2);
+exp_pctiles = prctile(postproc.balance_to_gdp.exp_pct,   [25 50 75], 2);
 
-% --- merge onto their common quarters --------------------------------------
+% --- merge onto the union of their quarters --------------------------------
+% Ragged edge: GDP can already be published for a quarter whose fiscal data
+% are still being forecast (or vice versa). Such quarters get the actual
+% value, marked "(actual)", or "--" if no actual is available.
 
-[common_dates, i_gdp, i_bal] = intersect(gdp_dates, bal_dates);
-if isempty(common_dates)
-    error('write_forecast_summary: GDP and balance forecasts share no common quarter.');
-end
+all_dates = union(gdp_dates, bal_dates);
+hist_qend = snap_qend(dates_dt - calmonths(1));
 
-lines = {'| Quarter | Real GDP, q/q (%) | GG balance (% of GDP) |', ...
-         '|---|---|---|'};
-for k = 1 : numel(common_dates)
-    qtr     = sprintf('%dQ%d', year(common_dates(k)), ceil(month(common_dates(k)) / 3));
-    gdp_row = gdp_pctiles(i_gdp(k), :);
-    bal_row = bal_pctiles(i_bal(k), :);
-    lines{end + 1} = sprintf('| %s | %.1f [%.1f, %.1f] | %.1f [%.1f, %.1f] |', ...
-        qtr, gdp_row(2), gdp_row(1), gdp_row(3), bal_row(2), bal_row(1), bal_row(3));
+lines = {'| Quarter | Real GDP, q/q (%) | GG balance (% of GDP) | GG revenues (% of GDP) | GG expenditures (% of GDP) |', ...
+         '|---|---|---|---|---|'};
+fmt_pct = @(r) sprintf('%.1f [%.1f, %.1f]', r(2), r(1), r(3));
+for k = 1 : numel(all_dates)
+    d   = all_dates(k);
+    qtr = sprintf('%dQ%d', year(d), ceil(month(d) / 3));
+
+    i_gdp = find(gdp_dates == d);
+    if ~isempty(i_gdp)
+        r = gdp_pctiles(i_gdp, :);
+        gdp_cell = sprintf('%.1f [%.1f, %.1f]', r(2), r(1), r(3));
+    else
+        idx_act = find(hist_qend == d & ~isnan(dataQ_restand(i, :)), 1, 'last');
+        if isempty(idx_act)
+            gdp_cell = '--';
+        else
+            gdp_cell = sprintf('%.1f (actual)', dataQ_restand(i, idx_act));
+        end
+    end
+
+    i_bal = find(bal_dates == d);
+    if ~isempty(i_bal)
+        bal_cell = fmt_pct(bal_pctiles(i_bal, :));
+        rev_cell = fmt_pct(rev_pctiles(i_bal, :));
+        exp_cell = fmt_pct(exp_pctiles(i_bal, :));
+    else
+        [bal_cell, rev_cell, exp_cell] = deal('--');
+    end
+
+    lines{end + 1} = sprintf('| %s | %s | %s | %s | %s |', qtr, gdp_cell, bal_cell, rev_cell, exp_cell);
 end
 
 out_file = fullfile(outpath, 'forecast_summary.md');

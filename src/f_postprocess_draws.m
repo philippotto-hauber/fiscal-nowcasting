@@ -15,11 +15,12 @@ function postproc = f_postprocess_draws(draws, dataQ, namesQ, dates, ngdp_raw_eu
 % variables -- via nominal = real x deflator / 100. That produces an
 % implied nominal GDP INDEX, not a EUR amount, so it cannot be used to form
 % a genuine balance-to-GDP percentage on its own. This function rescales
-% that index onto EUR terms using an anchor: the latest actual level in
+% that index onto EUR terms using an anchor: an actual level from
 % ngdp_raw_eur (GDP_NOMINAL_Q, raw EUR -- see main.m; kept out of the
 % estimated dataset itself, but still loaded for this purpose). The scale
-% factor is
-%   anchor_ngdp_eur / (last actual GDP_REAL_Q level x last actual
+% factor is (all three taken at the latest quarter where all three are
+% observed -- the series can have a ragged edge):
+%   anchor_ngdp_eur / (GDP_REAL_Q level x
 %                       GDP_DEFLATOR_Q level / 100)
 % applied uniformly to every forecast quarter and draw. This is a levels
 % anchor only -- it does not correct for any drift between the index's
@@ -48,7 +49,7 @@ function postproc = f_postprocess_draws(draws, dataQ, namesQ, dates, ngdp_raw_eu
 %                   EUR, NOT EUR millions (a mismatch here silently produces
 %                   a balance-to-GDP ratio too large by a factor of 1e6),
 %                   matching dataQ's time axis. The anchor used for i) is
-%                   this row's latest non-NaN value; the full row is also
+%                   its value at the latest quarter also observed for real GDP and the deflator; the full row is also
 %                   used for the historical balance-to-GDP ratio in ii).
 %
 % Returns postproc, a struct with:
@@ -61,7 +62,9 @@ function postproc = f_postprocess_draws(draws, dataQ, namesQ, dates, ngdp_raw_eu
 %   .balance_to_gdp   : .dates (quarters common to .balance and .ngdp) and
 %                        .ratio_pct (Hq_common x Ndraws, balance / nominal
 %                        GDP (EUR) x 100) -- forecast only, one column per
-%                        draw; plus .hist_dates_dt/.hist_ratio_pct (1 x T
+%                        draw; .rev_pct/.exp_pct (same shape, revenues/
+%                        expenditures as % of the same nominal GDP draw);
+%                        plus .hist_dates_dt/.hist_ratio_pct (1 x T
 %                        each, NaN outside actual quarters), the same ratio
 %                        computed from history, no draws involved.
 
@@ -72,16 +75,23 @@ yr_all = floor(dates);
 mo_all = round((dates - yr_all) * 12) + 1;
 dates_dt = datetime(yr_all, mo_all, 1);
 
-idx_ngdp_obs = find(~isnan(ngdp_raw_eur));
-anchor_ngdp_eur = ngdp_raw_eur(idx_ngdp_obs(end));
 
 % --- i) nominal GDP, rescaled from index to EUR ---------------------------
 
 ngdp = f_nominal_gdp(draws, dataQ, namesQ, dates);
 
-anchor_real = f_last_actual(dataQ, namesQ, 'GDP_REAL_Q');
-anchor_defl = f_last_actual(dataQ, namesQ, 'GDP_DEFLATOR_Q');
-anchor_ngdp_index = anchor_real * anchor_defl / 100;
+% Anchor all three series at the SAME quarter: the latest one where nominal
+% GDP (EUR), real GDP and the deflator are all observed. With a ragged edge
+% (e.g. real/nominal GDP already out for a quarter whose deflator isn't),
+% each series' own last value would refer to different quarters.
+i_real = f_row(namesQ, 'GDP_REAL_Q');
+i_defl = f_row(namesQ, 'GDP_DEFLATOR_Q');
+idx_anchor = find(~isnan(ngdp_raw_eur) & ~isnan(dataQ(i_real, :)) & ~isnan(dataQ(i_defl, :)), 1, 'last');
+if isempty(idx_anchor)
+    error('f_postprocess_draws: no quarter with nominal GDP, real GDP and deflator all observed.');
+end
+anchor_ngdp_eur   = ngdp_raw_eur(idx_anchor);
+anchor_ngdp_index = dataQ(i_real, idx_anchor) * dataQ(i_defl, idx_anchor) / 100;
 
 scale = anchor_ngdp_eur / anchor_ngdp_index;
 ngdp.levels_nom_eur = ngdp.levels_nom * scale;
@@ -109,6 +119,9 @@ end
 
 balance_to_gdp.dates = common_dates;
 balance_to_gdp.ratio_pct = 100 * balance.levels_balance(i_bal, :) ./ ngdp.levels_nom_eur(i_gdp, :);
+% Components of the same ratio (rev_pct - exp_pct = ratio_pct, per draw).
+balance_to_gdp.rev_pct   = 100 * balance.levels_rev(i_bal, :) ./ ngdp.levels_nom_eur(i_gdp, :);
+balance_to_gdp.exp_pct   = 100 * balance.levels_exp(i_bal, :) ./ ngdp.levels_nom_eur(i_gdp, :);
 
 % --- balance as a percent of nominal GDP, actual history -------------------
 % Same definition as the forecast above (SA revenue/expenditure levels over
@@ -127,11 +140,9 @@ postproc.balance_to_gdp = balance_to_gdp;
 end
 
 
-function level = f_last_actual(dataQ, namesQ, mnemonic)
+function i = f_row(namesQ, mnemonic)
 i = find(strcmp(namesQ, mnemonic));
 if isempty(i)
     error('f_postprocess_draws: %s not found among quarterly variables.', mnemonic);
 end
-idx_obs = find(~isnan(dataQ(i, :)));
-level = dataQ(i, idx_obs(end));
 end
